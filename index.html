@@ -528,14 +528,26 @@ class Component extends DCLogic {
     if (availH < 20 || availW < 10) return;
     const Lj = [...h.jou].length, Lc = [...h.chu].length, Lg = [...h.ge].length;
     // 実レイアウトに合わせた寸法: 行高1.15 / 列の左右余白9px / 上下余白10px / 列間9px / 字送り .18em
-    const gap = 9, padX = 4, padV = 10, lh = 1.15, adv = 1.18;
+    const gap = 9, padX = 4, padV = 10, adv = 1.18;
+    // 縦書き1列の実横幅は端末/フォントで 1.15em より広くなることがある（iOSのMinchoなど）。
+    // 実測した列幅から「1emあたりの実横幅」を割り出し、推定の過小評価で文字が枠外に切れるのを防ぐ。
+    let lh = 1.15;
+    const wrap = this.textWrapRef && this.textWrapRef.current;
+    const curFont = this.state.fitFont;
+    if (wrap && curFont && wrap.children && wrap.children.length) {
+      let maxCW = 0;
+      for (const ch of wrap.children) maxCW = Math.max(maxCW, ch.getBoundingClientRect().width);
+      const measured = (maxCW - padX * 2) / curFont;     // 実測の行ボックス幅(em換算, paddingを除く)
+      if (measured > 0.6 && measured < 3) lh = Math.max(lh, measured);
+    }
     const T0 = Math.round(availH * 0.02);                 // 初句の上端
     const step = Math.round(availH * 0.075);              // 階段の段差
     // 高さ: 各列 上端0/step/2*step、列高 = padV*2 + L*font*adv が枠内に収まる font 上限
     const capH = (off, L) => (availH * 0.97 - off - padV * 2) / (L * adv);
     const heightCap = Math.min(capH(T0, Lj), capH(T0 + step, Lc), capH(T0 + 2 * step, Lg));
-    // 横幅: 3列 (font*lh + padX*2) + 列間2つ が枠内に収まる font 上限
-    const widthCap = (availW * 0.98 - gap * 2 - 3 * padX * 2) / (3 * lh);
+    // 横幅: 3列 (font*lh + padX*2) + 列間2つ が枠内に収まる font 上限。
+    // 影/セリフの食み出しと端末差を見込んで余白を 0.90 まで確保し、左端の字が切れないようにする。
+    const widthCap = (availW * 0.90 - gap * 2 - 3 * padX * 2) / (3 * lh);
     let next = Math.floor(Math.min(heightCap, widthCap));
     next = Math.max(12, Math.min(44, next));
     const tops = [T0, T0 + step, T0 + 2 * step];
