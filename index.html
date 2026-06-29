@@ -37,7 +37,7 @@
   <div style="position:absolute; inset:0; background-image:{{ grainBg }}; opacity:.6; pointer-events:none; mix-blend-mode:multiply;"></div>
   <div style="position:absolute; top:0; bottom:0; left:6%; width:1px; background:linear-gradient(#23201a00, #23201a14 18%, #23201a14 82%, #23201a00); pointer-events:none;"></div>
 
-  <div ref="{{ outerRef }}" style="position:relative; width:min(94vw,440px); margin:auto; display:flex; flex-direction:column; align-items:center; gap:clamp(12px,2.4vh,22px); z-index:1;">
+  <div ref="{{ outerRef }}" style="{{ outerStyle }}">
 
     <div style="{{ frameStyle }}">
 
@@ -104,7 +104,7 @@
 
     </div>
 
-    <div style="height:104px; display:flex; align-items:center; justify-content:center;">
+    <div style="{{ controlsBarStyle }}">
 
       <sc-if value="{{ isCamera }}" hint-placeholder-val="{{ true }}">
         <div style="display:flex; align-items:center; gap:26px;">
@@ -306,7 +306,7 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;sealKanji&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;句&quot;,&quot;options&quot;:[&quot;句&quot;,&quot;詠&quot;,&quot;写&quot;,&quot;雅&quot;,&quot;風&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;落款&quot;},&quot;sealColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#b23a2e&quot;,&quot;options&quot;:[&quot;#b23a2e&quot;,&quot;#9c2b2b&quot;,&quot;#3a4a3f&quot;,&quot;#23201a&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;落款&quot;},&quot;grain&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;質感&quot;}}">
 class Component extends DCLogic {
-  state = { phase: 'camera', stillSrc: '', haiku: null, errorMsg: '', flash: 0, facing: 'environment', frameAspect: 4 / 5, frameW: 0, frameH: 0,
+  state = { phase: 'camera', stillSrc: '', haiku: null, errorMsg: '', flash: 0, facing: 'environment', frameAspect: 4 / 5, frameW: 0, frameH: 0, isLandscape: false,
     showSettings: false, showGallery: false, gallery: [], viewerSrc: '', anchor: 'MR', useAI: true, apiKey: '', apiModel: 'claude-sonnet-4-20250514', keyDraft: '', saved: false, taste: 'auto',
     showExplain: false, explainText: '', explainLoading: false };
 
@@ -368,7 +368,14 @@ class Component extends DCLogic {
     this.outerRef = React.createRef();
     this.explainStillRef = React.createRef();
     this.sceneHints = '';
-    this._onResize = () => this.computeFrameSize();
+    try { this.state.isLandscape = (window.innerWidth > window.innerHeight); } catch (e) {}
+    this._onResize = () => {
+      let ls = this.state.isLandscape;
+      try { ls = (window.innerWidth > window.innerHeight); } catch (e) {}
+      if (ls !== this.state.isLandscape) this.setState({ isLandscape: ls });
+      if (this.state.phase === 'camera') this.setFrameAspect(ls ? (4 / 3) : (3 / 4));
+      this.computeFrameSize();
+    };
     try {
       let k = (localStorage.getItem('shaku_api_key') || '').replace(/\s+/g, '');
       if (k && !(/^sk-ant-/.test(k) && k.length >= 40)) k = '';  // drop invalid/test keys
@@ -379,6 +386,8 @@ class Component extends DCLogic {
       this.state = { ...this.state, apiKey: k, keyDraft: k, apiModel: m, useAI: ua == null ? true : ua === '1', taste };
     } catch (e) {}
   }
+
+  cameraAspect() { return this.state.isLandscape ? (4 / 3) : (3 / 4); }   // 縦画面=3:4, 横画面=4:3 (W/H)
 
   hasBuiltinAI() { return !!(typeof window !== 'undefined' && window.claude && window.claude.complete); }
   hasAI() { return this.hasBuiltinAI() || this.keyLooksValid(this.cleanKey(this.state.apiKey)); }
@@ -432,17 +441,28 @@ class Component extends DCLogic {
     }
   };
 
-  componentDidMount() { this.computeFrameSize(); this.startCamera(); this.syncStill(); this.fitHaiku(); this.fitWhenFontsReady(); window.addEventListener('resize', this._onResize); this.loadFolderName(); this.loadGalleryAsync().then((g) => this.setState({ gallery: g })); }
+  componentDidMount() { this.computeFrameSize(); this.startCamera(); this.syncStill(); this.fitHaiku(); this.fitWhenFontsReady(); window.addEventListener('resize', this._onResize); window.addEventListener('orientationchange', this._onResize); this.loadFolderName(); this.loadGalleryAsync().then((g) => this.setState({ gallery: g })); }
   componentDidUpdate() { this.syncStill(); this.fitHaiku(); }
 
   computeFrameSize() {
     const wrap = this.outerRef.current;
     if (!wrap) return;
-    const availW = wrap.clientWidth || 360;
-    const availH = Math.min((window.innerHeight || 700) * 0.58, 520);
+    const vw = window.innerWidth || 360, vh = window.innerHeight || 700;
+    const landscape = vw > vh;
     const A = this.state.frameAspect || (4 / 5);
-    let W = availW, H = W / A;
-    if (H > availH) { H = availH; W = H * A; }
+    let W, H;
+    if (landscape) {
+      // 横画面: 操作ボタンを横に置くので、枠は高さいっぱいを使う
+      const availH = Math.min(vh * 0.92, 640);
+      const availW = Math.min(vw * 0.62, 820);   // 右側の操作スペースを残す
+      H = availH; W = H * A;
+      if (W > availW) { W = availW; H = W / A; }
+    } else {
+      const availW = wrap.clientWidth || 360;
+      const availH = Math.min(vh * 0.58, 520);
+      W = availW; H = W / A;
+      if (H > availH) { H = availH; W = H * A; }
+    }
     W = Math.round(W); H = Math.round(H);
     if (W !== this.state.frameW || H !== this.state.frameH) this.setState({ frameW: W, frameH: H });
   }
@@ -467,25 +487,18 @@ class Component extends DCLogic {
     const availH = area.clientHeight, availW = area.clientWidth;
     if (availH < 20 || availW < 10) return;
     const Lj = [...h.jou].length, Lc = [...h.chu].length, Lg = [...h.ge].length;
-    const T0 = availH * 0.01;            // 初句の上端
-    const step = availH * 0.10;          // 階段の段差
-    // bottom_ge = T0 + 2*step + Lc*charH (下端基準)  must be <= availH*0.96
-    // bottom_jou = T0 + Lj*charH ; bottom_chu = T0 + step + Lc*charH
-    let fH = Infinity;
-    [
-      (availH * 0.96 - T0) / (Lj * 1.18),                    // 初句が収まる
-      (availH * 0.96 - T0 - step) / (Lc * 1.18),             // 二句が収まる
-      (availH * 0.96 - T0 - 2 * step) / (Lc * 1.18)          // 結句下端(=二句下端+step)が収まる
-    ].forEach(f => { if (f < fH) fH = f; });
-    const gap = 9, fW = (availW - gap * 2) / (3 * 1.18);
-    let next = Math.floor(Math.min(fH, fW) * 0.96 * 0.7 * 1.73);
-    next = Math.max(10, Math.min(38, next));
-    const charH = next * 1.18;
-    const topJou = Math.round(T0);
-    const topChu = Math.round(T0 + step);
-    const bottomChu = topChu + Lc * charH;
-    const topGe = Math.max(0, Math.round(bottomChu + step - Lg * charH));
-    const tops = [topJou, topChu, topGe];
+    // 実レイアウトに合わせた寸法: 行高1.15 / 列の左右余白9px / 上下余白10px / 列間9px / 字送り .18em
+    const gap = 9, padX = 9, padV = 10, lh = 1.15, adv = 1.18;
+    const T0 = Math.round(availH * 0.02);                 // 初句の上端
+    const step = Math.round(availH * 0.075);              // 階段の段差
+    // 高さ: 各列 上端0/step/2*step、列高 = padV*2 + L*font*adv が枠内に収まる font 上限
+    const capH = (off, L) => (availH * 0.97 - off - padV * 2) / (L * adv);
+    const heightCap = Math.min(capH(T0, Lj), capH(T0 + step, Lc), capH(T0 + 2 * step, Lg));
+    // 横幅: 3列 (font*lh + padX*2) + 列間2つ が枠内に収まる font 上限
+    const widthCap = (availW * 0.98 - gap * 2 - 3 * padX * 2) / (3 * lh);
+    let next = Math.floor(Math.min(heightCap, widthCap));
+    next = Math.max(11, Math.min(36, next));
+    const tops = [T0, T0 + step, T0 + 2 * step];
     const key = (h.jou + h.chu + h.ge) + '|' + availH + 'x' + availW;
     const sameTops = this.state.fitTops && this.state.fitTops.join(',') === tops.join(',');
     if (this._fitKey !== key || this.state.fitFont !== next || !sameTops) {
@@ -503,7 +516,7 @@ class Component extends DCLogic {
       else if (el.hasAttribute('src')) el.removeAttribute('src');
     }
   }
-  componentWillUnmount() { this.stopStream(); window.removeEventListener('resize', this._onResize); }
+  componentWillUnmount() { this.stopStream(); window.removeEventListener('resize', this._onResize); window.removeEventListener('orientationchange', this._onResize); }
 
   stopStream() {
     if (this.stream) { try { this.stream.getTracks().forEach(t => t.stop()); } catch (e) {} this.stream = null; }
@@ -526,9 +539,8 @@ class Component extends DCLogic {
       if (v) {
         v.srcObject = stream; v.setAttribute('playsinline', '');
         await v.play().catch(() => {});
-        // set the live aspect once, when known, to avoid repeated re-renders that can pause iOS video
-        if (v.videoWidth) this.setFrameAspect(v.videoWidth / v.videoHeight);
-        else v.onloadedmetadata = () => { if (v.videoWidth) this.setFrameAspect(v.videoWidth / v.videoHeight); };
+        // カメラ画面は固定アスペクト（縦3:4 / 横4:3）。実映像は object-fit:cover で枠に合わせて切り取り表示
+        this.setFrameAspect(this.cameraAspect());
       }
       this.setState({ phase: 'camera', errorMsg: '' });
     } catch (e) {
@@ -614,10 +626,17 @@ class Component extends DCLogic {
     if (this.scene) { this.scene.rightLum = st.lum; this.scene.rightStd = st.std; }
   }
 
-  // keep the full image (no side trimming); fit within a max box, return its aspect
-  processImage(srcEl, sw, sh, mirror) {
-    let A = sw / sh;
-    A = Math.max(0.6, Math.min(1.9, A));   // clamp extreme panoramas
+  // cropA を渡すとそのアスペクト(W/H)に中央クロップ。無ければ元画像をそのまま（全体表示）
+  processImage(srcEl, sw, sh, mirror, cropA) {
+    let A, sx = 0, sy = 0, sW = sw, sH = sh;
+    if (cropA) {
+      A = cropA;
+      const srcA = sw / sh;
+      if (srcA > cropA) { sW = Math.round(sh * cropA); sx = Math.round((sw - sW) / 2); }   // 横長すぎ→左右を削る
+      else { sH = Math.round(sw / cropA); sy = Math.round((sh - sH) / 2); }                 // 縦長すぎ→上下を削る
+    } else {
+      A = Math.max(0.6, Math.min(1.9, sw / sh));   // clamp extreme panoramas
+    }
     const MAXD = 1200;
     let W, H;
     if (A >= 1) { W = MAXD; H = Math.round(MAXD / A); } else { H = MAXD; W = Math.round(MAXD * A); }
@@ -625,7 +644,7 @@ class Component extends DCLogic {
     canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext('2d');
     if (mirror) { ctx.translate(W, 0); ctx.scale(-1, 1); }
-    ctx.drawImage(srcEl, 0, 0, sw, sh, 0, 0, W, H);   // full frame, scaled to fill (no crop)
+    ctx.drawImage(srcEl, sx, sy, sW, sH, 0, 0, W, H);   // クロップ範囲を枠いっぱいに描画
     if (mirror) { ctx.setTransform(1, 0, 0, 1, 0, 0); }
     // downscaled copy for the vision API (faster upload)
     const scale = Math.min(1, 560 / Math.max(W, H));
@@ -749,7 +768,7 @@ class Component extends DCLogic {
     }
     this.setState({ flash: Date.now() });
     const mirror = this.state.facing === 'user';
-    const { dataUrl, apiDataUrl, hints, aspect } = this.processImage(v, v.videoWidth, v.videoHeight, mirror);
+    const { dataUrl, apiDataUrl, hints, aspect } = this.processImage(v, v.videoWidth, v.videoHeight, mirror, this.cameraAspect());
     this.sceneHints = hints;
     const anchor = this.pickAnchor(); this.applyAnchorPalette(anchor);
     this.setFrameAspect(aspect);
@@ -892,7 +911,8 @@ class Component extends DCLogic {
   }
 
   retake = () => {
-    this.setState({ phase: this.stream ? 'camera' : 'camera', haiku: null, stillSrc: '', fitFont: null });
+    this.setState({ phase: 'camera', haiku: null, stillSrc: '', fitFont: null });
+    this.setFrameAspect(this.cameraAspect());
     if (!this.stream) this.startCamera();
     else { const v = this.videoRef.current; if (v && v.paused) v.play().catch(() => {}); }
   };
@@ -1152,8 +1172,7 @@ class Component extends DCLogic {
     const textShadow = pal.textShadow;
     if (h) cols.forEach(c => Object.assign(c.style, colBg));
     // size: measured auto-fit (no wrapping); fall back to an estimate before first measure
-    const maxLen = h ? Math.max([...h.jou].length, [...h.chu].length, [...h.ge].length) : 7;
-    const estPx = Math.max(12, Math.min(24, Math.round(340 / (maxLen * 1.25) * 0.7 * 1.73)));
+    const estPx = 13;   // 計測前の控えめな初期値（直後に fitHaiku が実寸へ調整）
     const fontPx = this.state.fitFont || estPx;
     const haikuTextStyle = {
       height:'100%', width:'100%', display:'flex', flexDirection:'row-reverse', alignItems:'flex-start', justifyContent:'center', gap:'9px',
@@ -1181,6 +1200,17 @@ class Component extends DCLogic {
       seal, sealMark: mark,
       videoRef: this.videoRef, fileRef: this.fileRef, stillRef: this.stillRef,
       outerRef: this.outerRef,
+      outerStyle: {
+        position: 'relative', margin: 'auto', display: 'flex',
+        flexDirection: this.state.isLandscape ? 'row' : 'column',
+        alignItems: 'center', justifyContent: 'center',
+        gap: this.state.isLandscape ? '20px' : 'clamp(12px,2.4vh,22px)',
+        width: this.state.isLandscape ? 'min(96vw,1040px)' : 'min(94vw,440px)',
+        zIndex: 1
+      },
+      controlsBarStyle: this.state.isLandscape
+        ? { minWidth: '160px', maxWidth: '34vw', alignSelf: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }
+        : { height: '104px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
       frameStyle: {
         position:'relative',
         width: (this.state.frameW || 0) ? this.state.frameW + 'px' : 'min(94vw,440px)',
