@@ -133,7 +133,7 @@
       <sc-if value="{{ isResult }}" hint-placeholder-val="{{ false }}">
         <div style="display:flex; flex-direction:column; align-items:center; gap:14px; animation:fadeIn .6s .3s both;">
           <sc-if value="{{ aiFailed }}" hint-placeholder-val="{{ false }}">
-            <div onClick="{{ openSettings }}" style="max-width:330px; font-family:'Zen Kaku Gothic New',sans-serif; font-size:11px; line-height:1.7; color:#8a3a2e; background:rgba(178,58,46,.08); border:1px solid rgba(178,58,46,.28); border-radius:3px; padding:9px 12px; text-align:center; cursor:pointer;">AIで詠めませんでした。設定を確認してください。<br></div>
+            <div onClick="{{ openSettings }}" style="max-width:330px; font-family:'Zen Kaku Gothic New',sans-serif; font-size:11px; line-height:1.7; color:#8a3a2e; background:rgba(178,58,46,.08); border:1px solid rgba(178,58,46,.28); border-radius:3px; padding:9px 12px; text-align:center; cursor:pointer;">{{ aiFailText }}<br></div>
           </sc-if>
           <div style="font-family:'Shippori Mincho',serif; font-size:12px; letter-spacing:.28em; color:#7a7060;">季語　{{ kigo }}</div>
           <div style="display:flex; gap:11px; flex-wrap:wrap; justify-content:center;">
@@ -218,6 +218,18 @@
           <div style="margin-top:7px; font-size:11px; color:#9a9081;">現在: {{ keyMasked }}</div>
         </div>
 
+        <div style="padding:15px 0 4px; border-top:1px solid rgba(35,32,25,.12);">
+          <div style="font-family:'Shippori Mincho',serif; font-size:15px; letter-spacing:.06em; margin-bottom:3px;">クレジット残高</div>
+          <sc-if value="{{ lowCredit }}" hint-placeholder-val="{{ false }}">
+            <div style="margin:6px 0 10px; font-size:11px; line-height:1.7; color:#8a3a2e; background:rgba(178,58,46,.08); border:1px solid rgba(178,58,46,.28); border-radius:3px; padding:9px 11px;">クレジット残高が不足している可能性があります。下のページでチャージしてください。</div>
+          </sc-if>
+          <div style="font-size:11px; line-height:1.8; color:#9a9081; margin-bottom:10px;">残高はアプリからは取得できません（Anthropicに残高取得用のAPIがないため）。下のページを開いてご確認ください。</div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div onClick="{{ selectUrl }}" style="flex:1; font-family:ui-monospace,monospace; font-size:11px; color:#23201a; background:#f3eee2; border:1px solid rgba(35,32,25,.14); border-radius:3px; padding:8px 10px; user-select:all; cursor:text; word-break:break-all;">https://console.anthropic.com/settings/billing</div>
+            <button onClick="{{ copyBillingUrl }}" style="flex-shrink:0; font-family:'Zen Kaku Gothic New',sans-serif; font-size:11px; letter-spacing:.06em; color:#f6f1e6; background:#23201a; border:none; border-radius:3px; padding:8px 14px; cursor:pointer;">{{ billingCopyLabel }}</button>
+          </div>
+        </div>
+
         <div style="display:flex; gap:10px; margin-top:22px;">
           <button onClick="{{ closeSettings }}" style="flex:1; font-family:'Shippori Mincho',serif; font-size:14px; letter-spacing:.12em; color:#23201a; background:none; border:1px solid rgba(35,32,25,.3); padding:11px 0; border-radius:2px; cursor:pointer;">閉じる</button>
           <button onClick="{{ saveSettings }}" style="flex:1.4; font-family:'Shippori Mincho',serif; font-size:14px; letter-spacing:.12em; color:#f6f1e6; background:#23201a; border:1px solid #23201a; padding:11px 0; border-radius:2px; cursor:pointer;">{{ saveLabel }}</button>
@@ -227,13 +239,13 @@
   </sc-if>
 
   <sc-if value="{{ showExplain }}" hint-placeholder-val="{{ false }}">
-    <div style="position:absolute; inset:0; z-index:35; background:#ece4d4; display:flex; flex-direction:column; font-family:'Zen Kaku Gothic New',sans-serif; color:#23201a;">
+    <div style="position:absolute; inset:0; z-index:45; background:#ece4d4; display:flex; flex-direction:column; font-family:'Zen Kaku Gothic New',sans-serif; color:#23201a;">
       <div style="position:absolute; inset:0; background-image:{{ grainBg }}; opacity:.5; pointer-events:none; mix-blend-mode:multiply;"></div>
 
       <div style="position:relative; z-index:2; display:flex; align-items:center; justify-content:space-between; padding:13px 16px; border-bottom:1px solid rgba(35,32,25,.14);">
         <div style="display:flex; align-items:baseline; gap:10px;">
           <div style="font-family:'Shippori Mincho',serif; font-weight:700; font-size:19px; letter-spacing:.16em;">解説</div>
-          <div style="font-family:'Shippori Mincho',serif; font-size:11px; letter-spacing:.24em; color:#7a7060;">季語　{{ kigo }}</div>
+          <div style="font-family:'Shippori Mincho',serif; font-size:11px; letter-spacing:.24em; color:#7a7060;">季語　{{ explainKigo }}</div>
         </div>
         <button onClick="{{ closeExplain }}" aria-label="閉じる" style="display:inline-flex; align-items:center; gap:6px; font-family:'Zen Kaku Gothic New',sans-serif; font-size:11px; letter-spacing:.1em; color:#5e564a; background:rgba(246,241,230,.7); border:1px solid rgba(35,32,25,.18); border-radius:999px; padding:7px 13px; cursor:pointer;">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5e564a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"></path></svg>
@@ -295,8 +307,9 @@
   <sc-if value="{{ viewerSrc }}" hint-placeholder-val="">
     <div onClick="{{ closeViewer }}" style="position:absolute; inset:0; z-index:40; background:rgba(12,10,7,.88); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; gap:16px;">
       {{ viewerImg }}
-      <div style="display:flex; gap:12px;">
-        <button onClick="{{ saveViewer }}" style="font-family:'Shippori Mincho',serif; font-size:13px; letter-spacing:.14em; color:#1c1a14; background:#f3eee2; border:none; padding:10px 20px; border-radius:2px; cursor:pointer;">保存</button>
+      <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
+        <button onClick="{{ explainViewer }}" style="display:inline-flex; align-items:center; gap:6px; font-family:'Shippori Mincho',serif; font-size:13px; letter-spacing:.14em; color:#1c1a14; background:#f3eee2; border:none; padding:10px 20px; border-radius:2px; cursor:pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1c1a14" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h12M4 10h9M4 15h12M4 20h7"></path></svg>解説</button>
+        <button onClick="{{ shareViewer }}" style="display:inline-flex; align-items:center; gap:6px; font-family:'Shippori Mincho',serif; font-size:13px; letter-spacing:.14em; color:#f6f1e6; background:none; border:1px solid rgba(246,241,230,.5); padding:10px 20px; border-radius:2px; cursor:pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f6f1e6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"></path><path d="M16 6l-4-4-4 4"></path><path d="M12 2v13"></path></svg>共有</button>
         <button onClick="{{ closeViewer }}" style="font-family:'Shippori Mincho',serif; font-size:13px; letter-spacing:.14em; color:#f6f1e6; background:none; border:1px solid rgba(246,241,230,.5); padding:10px 20px; border-radius:2px; cursor:pointer;">閉じる</button>
       </div>
     </div>
@@ -308,15 +321,40 @@
 class Component extends DCLogic {
   state = { phase: 'camera', stillSrc: '', haiku: null, errorMsg: '', flash: 0, facing: 'environment', frameAspect: 4 / 5, frameW: 0, frameH: 0, isLandscape: false,
     showSettings: false, showGallery: false, gallery: [], viewerSrc: '', anchor: 'MR', useAI: true, apiKey: '', apiModel: 'claude-sonnet-4-20250514', keyDraft: '', saved: false, taste: 'auto',
-    showExplain: false, explainText: '', explainLoading: false };
+    showExplain: false, explainText: '', explainLoading: false, explainHaiku: null, explainImg: '', viewerWork: null,
+    lowCredit: false, copiedBilling: false };
+
+  isCreditError(msg) { return /credit balance|too low|insufficient|account_billing|残高/i.test(String(msg || '')); }
+
+  copyBillingUrl = async () => {
+    const url = 'https://console.anthropic.com/settings/billing';
+    let ok = false;
+    try { await navigator.clipboard.writeText(url); ok = true; } catch (e) {}
+    if (!ok) {
+      try {
+        const ta = document.createElement('textarea'); ta.value = url;
+        ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta);
+        ta.focus(); ta.select(); ok = document.execCommand('copy'); document.body.removeChild(ta);
+      } catch (e) {}
+    }
+    this.setState({ copiedBilling: ok });
+    if (ok) { clearTimeout(this._copyBT); this._copyBT = setTimeout(() => this.setState({ copiedBilling: false }), 2000); }
+  };
 
   haikuKey() { const h = this.state.haiku; return h ? (h.jou + h.chu + h.ge) : ''; }
 
-  openExplain = () => {
-    const fresh = this._explainFor === this.haikuKey() && !!this.state.explainText;
-    this.setState({ showExplain: true });
-    if (!fresh) this.generateExplain();
-  };
+  openExplain = () => this.openExplainFor(this.state.haiku, this.state.stillSrc, this.lastDesc, this.haikuKey());
+  explainViewer = () => { const w = this.state.viewerWork; if (w) this.openExplainFor(w.haiku, w.src, w.desc, 'work:' + w.id); };
+  openExplainFor(h, img, desc, key) {
+    this.setState({ showExplain: true, explainHaiku: h || null, explainImg: img || '' });
+    if (!h) {
+      this._explainFor = null;
+      this.setState({ explainLoading: false, explainText: 'この作品には句の情報が保存されていないため、解説を表示できません。新しく詠んだ句では解説をご覧いただけます。' });
+      return;
+    }
+    const fresh = this._explainFor === key && !!this.state.explainText;
+    if (!fresh) this.generateExplain(h, desc, key);
+  }
   closeExplain = () => this.setState({ showExplain: false });
 
   localExplain(h) {
@@ -326,8 +364,8 @@ class Component extends DCLogic {
       + `目に映ったものを言葉へ置きかえるとき、説明には現れない季節の移ろいや心の機微が、静かに立ちのぼってきます。`;
   }
 
-  async generateExplain() {
-    const h = this.state.haiku; if (!h) return;
+  async generateExplain(h, desc, key) {
+    h = h || this.state.haiku; if (!h) return;
     this.setState({ explainLoading: true, explainText: '' });
     let text = '';
     if (this.aiEnabled()) {
@@ -336,14 +374,14 @@ class Component extends DCLogic {
         const out = await this.withTimeout(this.aiComplete([{ role: 'user', content:
           `次の俳句について、やさしい鑑賞の解説文を書いてください。\n\n` +
           `【句】${ku}\n【季語】${h.kigo || '—'}\n` +
-          (this.lastDesc ? `【背景となった写真】${this.lastDesc}\n` : '') +
+          (desc ? `【背景となった写真】${desc}\n` : '') +
           `\n【書き方】\n- 季語と季節、句に詠まれた情景をやさしく説明する。\n- 切れ・表現の工夫や、込められた心情・余情を読み解く。\n- 写真と句のつながりにも触れる。\n- 全体で200〜300字、2〜3の短い段落に分け、段落間は空行で区切る。\n- 前置きや見出しは不要、本文のみ。日本語のみ。`
         }], 600), 30000);
         text = (out || '').replace(/^#.*$/gm, '').replace(/\*\*/g, '').trim();
       } catch (e) { text = ''; }
     }
     if (!text) text = this.localExplain(h);
-    this._explainFor = this.haikuKey();
+    this._explainFor = key || this.haikuKey();
     this.setState({ explainText: text, explainLoading: false });
   }
 
@@ -431,12 +469,14 @@ class Component extends DCLogic {
     this.setState({ apiKey: k, keyDraft: k, testState: 'run', testMsg: '接続を確認しています…' });
     try {
       await this.withTimeout(this.aiComplete([{ role: 'user', content: 'こんにちは、と一言だけ返して' }], 16), 15000);
-      this.setState({ testState: 'ok', testMsg: '接続成功（' + (this.workingModel || 'model') + '）', saved: true });
+      this.setState({ testState: 'ok', testMsg: '接続成功（' + (this.workingModel || 'model') + '）', saved: true, lowCredit: false });
     } catch (e) {
       const raw = String(e && e.message || e);
       let hint = '';
-      if (/401|authentication/i.test(raw)) hint = 'キーが不正、不完全、または失効しています。console.anthropic.com でキー全体をコピーし直してください。' + formatWarn + ' ' + shape;
-      else if (/429|rate|quota|credit|billing/i.test(raw)) hint = 'レート制限またはクレジット不足の可能性があります。';
+      const credit = this.isCreditError(raw) || /\b402\b/.test(raw);
+      if (credit) { hint = 'クレジット残高が不足している可能性があります。下の「クレジット残高」からチャージしてください。'; this.setState({ lowCredit: true }); }
+      else if (/401|authentication/i.test(raw)) hint = 'キーが不正、不完全、または失効しています。console.anthropic.com でキー全体をコピーし直してください。' + formatWarn + ' ' + shape;
+      else if (/429|rate|quota/i.test(raw)) hint = 'レート制限の可能性があります。少し時間をおいてお試しください。';
       this.setState({ testState: 'err', testMsg: '失敗: ' + (hint || raw.slice(0, 140)) });
     }
   };
@@ -497,7 +537,7 @@ class Component extends DCLogic {
     // 横幅: 3列 (font*lh + padX*2) + 列間2つ が枠内に収まる font 上限
     const widthCap = (availW * 0.98 - gap * 2 - 3 * padX * 2) / (3 * lh);
     let next = Math.floor(Math.min(heightCap, widthCap));
-    next = Math.max(11, Math.min(36, next));
+    next = Math.max(12, Math.min(44, next));
     const tops = [T0, T0 + step, T0 + 2 * step];
     const key = (h.jou + h.chu + h.ge) + '|' + availH + 'x' + availW;
     const sameTops = this.state.fitTops && this.state.fitTops.join(',') === tops.join(',');
@@ -508,9 +548,11 @@ class Component extends DCLogic {
   }
 
   syncStill() {
-    const els = [this.stillRef.current, this.explainStillRef.current];
-    const src = this.state.stillSrc;
-    for (const el of els) {
+    const pairs = [
+      [this.stillRef.current, this.state.stillSrc],
+      [this.explainStillRef.current, this.state.explainImg || this.state.stillSrc]
+    ];
+    for (const [el, src] of pairs) {
       if (!el) continue;
       if (src) { if (el.getAttribute('src') !== src) el.setAttribute('src', src); }
       else if (el.hasAttribute('src')) el.removeAttribute('src');
@@ -584,7 +626,8 @@ class Component extends DCLogic {
 
   // ---- haiku placement: choose the emptiest of 7 anchors so text avoids the subject ----
   anchorRect(key) {
-    const W = 0.36, Htall = 0.62, top = 0.03, mid = 0.20, bot = 0.35, L = 0.03, Rr = 0.61, Cx = 0.32;
+    // テキスト領域を従来より広く取り、写真連動を保ったまま句を約1.2倍に
+    const W = 0.40, Htall = 0.70, top = 0.02, mid = 0.15, bot = 0.27, L = 0.03, Rr = 0.57, Cx = 0.30;
     const M = {
       TR: { left: Rr, top: top }, MR: { left: Rr, top: mid }, BR: { left: Rr, top: bot },
       TL: { left: L, top: top }, ML: { left: L, top: mid }, BL: { left: L, top: bot },
@@ -894,8 +937,12 @@ class Component extends DCLogic {
       }
     }
     const aiFailed = !!(keySet && this.state.useAI && this.aiError && this.aiError !== 'no-key');
+    const creditFail = aiFailed && this.isCreditError(this.aiError);
+    let nextLow = this.state.lowCredit;
+    if (creditFail) nextLow = true;
+    else if (this.aiEnabled() && !this.aiError) nextLow = false;   // AIが成功したら警告解除
     if (!haiku) haiku = this.localHaiku();
-    this.setState({ haiku, phase: 'result', fitFont: null, aiFailed, aiErrorMsg: aiFailed ? this.aiError : '' });
+    this.setState({ haiku, phase: 'result', fitFont: null, aiFailed, aiErrorMsg: aiFailed ? this.aiError : '', lowCredit: nextLow });
   }
 
   localHaiku() {
@@ -1075,18 +1122,37 @@ class Component extends DCLogic {
     const tc = document.createElement('canvas'); tc.width = W; tc.height = H;
     tc.getContext('2d').drawImage(canvas, 0, 0, W, H);
     const src = tc.toDataURL('image/jpeg', 0.82);
-    const item = { id: 'w' + Date.now(), ts: Date.now(), src };
+    const h = this.state.haiku;
+    const item = {
+      id: 'w' + Date.now(), ts: Date.now(), src,
+      haiku: h ? { jou: h.jou, chu: h.chu, ge: h.ge, kigo: h.kigo || '' } : null,
+      desc: this.lastDesc || ''
+    };
     const list = [item].concat(this.state.gallery || []);
     const saved = await this.persistGallery(list);
     this.setState({ gallery: saved });
   }
   openGallery = () => { this.setState({ showGallery: true }); this.loadGalleryAsync().then((g) => this.setState({ gallery: g })); };
   closeGallery = () => this.setState({ showGallery: false });
-  openViewer = (src) => this.setState({ viewerSrc: src });
-  closeViewer = () => this.setState({ viewerSrc: '' });
-  saveViewer = () => {
-    const url = this.state.viewerSrc; if (!url) return;
-    const a = document.createElement('a'); a.href = url; a.download = `写句_${this.stamp()}.jpg`; document.body.appendChild(a); a.click(); a.remove();
+  openViewer = (w) => {
+    if (typeof w === 'string') w = (this.state.gallery || []).find(x => x.src === w) || { src: w };
+    this.setState({ viewerSrc: w.src, viewerWork: w });
+  };
+  closeViewer = () => this.setState({ viewerSrc: '', viewerWork: null });
+  shareViewer = async () => {
+    const src = this.state.viewerSrc; if (!src) return;
+    const name = `写句_${this.stamp()}.png`;
+    try {
+      const blob = await (await fetch(src)).blob();
+      const file = new File([blob], name, { type: blob.type || 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: '写句' });
+        return;
+      }
+      if (navigator.share) { await navigator.share({ title: '写句' }); return; }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+    // 共有非対応 → 保存にフォールバック
+    const a = document.createElement('a'); a.href = src; a.download = name; document.body.appendChild(a); a.click(); a.remove();
   };
   removeFromGallery = async (id) => {
     const saved = await this.persistGallery((this.state.gallery || []).filter((w) => w.id !== id));
@@ -1172,7 +1238,7 @@ class Component extends DCLogic {
     const textShadow = pal.textShadow;
     if (h) cols.forEach(c => Object.assign(c.style, colBg));
     // size: measured auto-fit (no wrapping); fall back to an estimate before first measure
-    const estPx = 13;   // 計測前の控えめな初期値（直後に fitHaiku が実寸へ調整）
+    const estPx = 16;   // 計測前の控えめな初期値（直後に fitHaiku が実寸へ調整）
     const fontPx = this.state.fitFont || estPx;
     const haikuTextStyle = {
       height:'100%', width:'100%', display:'flex', flexDirection:'row-reverse', alignItems:'flex-start', justifyContent:'center', gap:'9px',
@@ -1245,7 +1311,8 @@ class Component extends DCLogic {
       explainReady: !this.state.explainLoading && !!this.state.explainText,
       explainText: this.state.explainText,
       explainStillRef: this.explainStillRef,
-      explainColumns: h ? [h.jou, h.chu, h.ge].map((t) => ({
+      explainKigo: (this.state.explainHaiku || h) ? ((this.state.explainHaiku || h).kigo || '—') : '—',
+      explainColumns: (this.state.explainHaiku || h) ? [(this.state.explainHaiku || h).jou, (this.state.explainHaiku || h).chu, (this.state.explainHaiku || h).ge].map((t) => ({
         text: t,
         style: { writingMode: 'vertical-rl', whiteSpace: 'nowrap' }
       })) : [],
@@ -1291,6 +1358,12 @@ class Component extends DCLogic {
       selectUrl: (e) => { try { const r = document.createRange(); r.selectNodeContents(e.currentTarget); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } catch (x) {} },
       copyUrl: this.copyUrl,
       copyLabel: this.state.copied ? 'コピー済' : 'コピー',
+      lowCredit: !!this.state.lowCredit,
+      copyBillingUrl: this.copyBillingUrl,
+      billingCopyLabel: this.state.copiedBilling ? 'コピー済' : 'コピー',
+      aiFailText: this.state.lowCredit
+        ? 'クレジット残高が不足しているようです。チャージするか設定を確認してください。'
+        : 'AIで詠めませんでした。設定を確認してください。',
       testMsg: this.state.testMsg || '',
       testColor: this.state.testState === 'ok' ? '#3a7d4e' : this.state.testState === 'err' ? '#b23a2e' : '#7a7060',
       aiFailed: !!this.state.aiFailed,
@@ -1312,14 +1385,14 @@ class Component extends DCLogic {
       showGallery: this.state.showGallery,
       galleryItems: (this.state.gallery || []).map(w => ({
         src: w.src,
-        open: () => this.openViewer(w.src),
+        open: () => this.openViewer(w),
         remove: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this.removeFromGallery(w.id); }
       })),
       galleryGrid: (this.state.gallery || []).map(w => React.createElement('div', {
         key: w.id,
         style: { position:'relative', borderRadius:'3px', overflow:'hidden', boxShadow:'0 1px 0 rgba(255,255,255,.5), 0 8px 20px -12px rgba(20,16,10,.5), 0 0 0 1px rgba(35,32,25,.14)', cursor:'pointer' }
       },
-        React.createElement('img', { src: w.src, alt: '', onClick: () => this.openViewer(w.src), style: { display:'block', width:'100%', height:'auto' } }),
+        React.createElement('img', { src: w.src, alt: '', onClick: () => this.openViewer(w), style: { display:'block', width:'100%', height:'auto' } }),
         React.createElement('button', {
           'aria-label': '削除',
           onClick: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this.removeFromGallery(w.id); },
@@ -1331,7 +1404,8 @@ class Component extends DCLogic {
       galleryCount: (this.state.gallery && this.state.gallery.length) ? this.state.gallery.length + '点' : '',
       viewerSrc: this.state.viewerSrc || '',
       closeViewer: this.closeViewer,
-      saveViewer: this.saveViewer
+      shareViewer: this.shareViewer,
+      explainViewer: this.explainViewer
     };
   }
 }
