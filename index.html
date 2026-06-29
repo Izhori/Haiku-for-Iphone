@@ -1227,12 +1227,11 @@ class Component extends DCLogic {
 
     // --- adaptive haiku styling based on the photo's text area ---
     const pal = this.haikuPalette();
-    // minimal blurred backdrop hugging each column (no wide strip)
+    // minimal soft backdrop hugging each column (no backdrop-filter — iOSでtransform合成と干渉し文字が崩れるため)
     const [br, bg, bb] = pal.scrimRGB;
     const fade = 'radial-gradient(ellipse 64% 88% at 50% 50%, #000 46%, rgba(0,0,0,0.32) 74%, transparent 100%)';
     const colBg = {
-      background: `rgba(${br},${bg},${bb},${pal.darkText ? 0.32 : 0.30})`,
-      backdropFilter: 'blur(13px)', WebkitBackdropFilter: 'blur(13px)',
+      background: `rgba(${br},${bg},${bb},${pal.darkText ? 0.42 : 0.44})`,
       borderRadius: '8px', padding: '10px 4px',
       maskImage: fade, WebkitMaskImage: fade
     };
