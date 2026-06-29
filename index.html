@@ -242,7 +242,7 @@
     <div style="position:absolute; inset:0; z-index:45; background:#ece4d4; display:flex; flex-direction:column; font-family:'Zen Kaku Gothic New',sans-serif; color:#23201a;">
       <div style="position:absolute; inset:0; background-image:{{ grainBg }}; opacity:.5; pointer-events:none; mix-blend-mode:multiply;"></div>
 
-      <div style="position:relative; z-index:2; display:flex; align-items:center; justify-content:space-between; padding:13px 16px; border-bottom:1px solid rgba(35,32,25,.14);">
+      <div style="position:relative; z-index:2; display:flex; align-items:center; justify-content:space-between; padding:13px 16px 13px max(16px, env(safe-area-inset-left)); border-bottom:1px solid rgba(35,32,25,.14);">
         <div style="display:flex; align-items:baseline; gap:10px;">
           <div style="font-family:'Shippori Mincho',serif; font-weight:700; font-size:19px; letter-spacing:.16em;">解説</div>
           <div style="font-family:'Shippori Mincho',serif; font-size:11px; letter-spacing:.24em; color:#7a7060;">季語　{{ explainKigo }}</div>
@@ -255,7 +255,7 @@
 
       <div style="position:relative; z-index:2; flex:1; min-height:0; display:flex;">
 
-        <div style="width:50%; min-width:0; overflow:auto; padding:18px 16px 22px; border-right:1px solid rgba(35,32,25,.14);">
+        <div style="width:50%; min-width:0; overflow:auto; padding:18px 16px 22px max(16px, env(safe-area-inset-left)); border-right:1px solid rgba(35,32,25,.14);">
           <sc-if value="{{ explainLoading }}" hint-placeholder-val="{{ true }}">
             <div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; color:#7a7060;">
               <svg width="100" height="50" viewBox="0 0 120 60" fill="none"><path d="M10 40 C 30 12, 50 12, 60 30 S 92 48, 110 18" stroke="#7a7060" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="220" style="animation:brushSweep 1.6s ease-in-out infinite;"></path></svg>
@@ -320,7 +320,7 @@
 <script type="text/x-dc" data-dc-script data-props="{&quot;sealKanji&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;句&quot;,&quot;options&quot;:[&quot;句&quot;,&quot;詠&quot;,&quot;写&quot;,&quot;雅&quot;,&quot;風&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;落款&quot;},&quot;sealColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#b23a2e&quot;,&quot;options&quot;:[&quot;#b23a2e&quot;,&quot;#9c2b2b&quot;,&quot;#3a4a3f&quot;,&quot;#23201a&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;落款&quot;},&quot;grain&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;質感&quot;}}">
 class Component extends DCLogic {
   state = { phase: 'camera', stillSrc: '', haiku: null, errorMsg: '', flash: 0, facing: 'environment', frameAspect: 4 / 5, frameW: 0, frameH: 0, isLandscape: false,
-    showSettings: false, showGallery: false, gallery: [], viewerSrc: '', anchor: 'MR', useAI: true, apiKey: '', apiModel: 'claude-sonnet-4-20250514', keyDraft: '', saved: false, taste: 'auto',
+    showSettings: false, showGallery: false, gallery: [], viewerSrc: '', anchor: 'TR', useAI: true, apiKey: '', apiModel: 'claude-sonnet-4-20250514', keyDraft: '', saved: false, taste: 'auto',
     showExplain: false, explainText: '', explainLoading: false, explainHaiku: null, explainImg: '', viewerWork: null,
     lowCredit: false, copiedBilling: false };
 
@@ -633,7 +633,7 @@ class Component extends DCLogic {
       TL: { left: L, top: top }, ML: { left: L, top: mid }, BL: { left: L, top: bot },
       TC: { left: Cx, top: top }
     };
-    const a = M[key] || M.MR;
+    const a = M[key] || M.TR;
     return { left: a.left, top: a.top, w: W, h: Htall };
   }
   anchorKeys() { return ['TR', 'MR', 'BR', 'TL', 'ML', 'BL', 'TC']; }
@@ -651,12 +651,19 @@ class Component extends DCLogic {
   }
 
   pickAnchor() {
-    if (!this.busyMap) return 'MR';
-    let best = 'MR', bestScore = Infinity;
+    if (!this.busyMap) return 'TR';
+    // 標準は右上(TR)。人物や重要オブジェクトと重なる場合のみ他の配置に切り替える。
+    let sum = 0; for (let i = 0; i < this.busyMap.length; i++) sum += this.busyMap[i];
+    const meanBusy = sum / this.busyMap.length;          // 画像全体の平均エッジエネルギー
+    const stTR = this.regionStats(this.anchorRect('TR'));
+    const skinHit = stTR.skin > 0.02;                    // 人物の肌が少しでも入る
+    const objectHit = stTR.busy > Math.max(9, meanBusy * 1.3);   // 周囲より明らかに複雑＝重要オブジェクト
+    if (!skinHit && !objectHit) return 'TR';             // 右上が空いていれば標準採用
+    // 干渉する場合のみ最適配置（右上→上→右 を優先するバイアス付き）
+    let best = 'TR', bestScore = Infinity;
     for (const k of this.anchorKeys()) {
       const st = this.regionStats(this.anchorRect(k));
-      // strongly avoid people (skin); then prefer the emptiest area; tiny bias to the classic right side
-      const bias = (k === 'MR' || k === 'TR' || k === 'BR') ? 0.92 : 1.0;
+      const bias = (k === 'TR') ? 0.82 : (k === 'TC' || k === 'MR') ? 0.92 : (k === 'BR' || k === 'TL') ? 0.97 : 1.0;
       const score = (st.busy + st.skin * 900) * bias;
       if (score < bestScore) { bestScore = score; best = k; }
     }
@@ -985,7 +992,7 @@ class Component extends DCLogic {
     const padI = 9 * k, padT = 10 * k, gap = 9 * k;     // column padding 10/9px + gap 9px
     const colBoxW = fs * 1.15 + padI * 2;               // line-height 1.15 cross-axis + h padding
     const totalW = colBoxW * 3 + gap * 2;
-    const areaR = this.anchorRect(this.state.anchor || 'MR');
+    const areaR = this.anchorRect(this.state.anchor || 'TR');
     const areaW = areaR.w * W, areaLeft = areaR.left * W, areaTop = areaR.top * H; // chosen anchor
     const startLeft = areaLeft + (areaW - totalW) / 2;        // justify-content center
     const tops = (this.state.fitTops && this.state.fitTops.length === 3)
@@ -1250,7 +1257,7 @@ class Component extends DCLogic {
       colAreaRef: this.colAreaRef, textWrapRef: this.textWrapRef,
       colAreaRef: this.colAreaRef, textWrapRef: this.textWrapRef,
       colAreaStyle: (() => {
-        const r = this.anchorRect(this.state.anchor || 'MR');
+        const r = this.anchorRect(this.state.anchor || 'TR');
         return {
           position: 'absolute',
           left: (r.left * 100).toFixed(2) + '%',
