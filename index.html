@@ -528,7 +528,7 @@ class Component extends DCLogic {
     if (availH < 20 || availW < 10) return;
     const Lj = [...h.jou].length, Lc = [...h.chu].length, Lg = [...h.ge].length;
     // 実レイアウトに合わせた寸法: 行高1.15 / 列の左右余白9px / 上下余白10px / 列間9px / 字送り .18em
-    const gap = 9, padX = 9, padV = 10, lh = 1.15, adv = 1.18;
+    const gap = 9, padX = 4, padV = 10, lh = 1.15, adv = 1.18;
     const T0 = Math.round(availH * 0.02);                 // 初句の上端
     const step = Math.round(availH * 0.075);              // 階段の段差
     // 高さ: 各列 上端0/step/2*step、列高 = padV*2 + L*font*adv が枠内に収まる font 上限
@@ -627,7 +627,7 @@ class Component extends DCLogic {
   // ---- haiku placement: choose the emptiest of 7 anchors so text avoids the subject ----
   anchorRect(key) {
     // テキスト領域を従来より広く取り、写真連動を保ったまま句を約1.2倍に
-    const W = 0.40, Htall = 0.70, top = 0.02, mid = 0.15, bot = 0.27, L = 0.03, Rr = 0.57, Cx = 0.30;
+    const W = 0.40, Htall = 0.70, top = 0.02, mid = 0.15, bot = 0.27, L = 0.03, Rr = 0.52, Cx = 0.30;
     const M = {
       TR: { left: Rr, top: top }, MR: { left: Rr, top: mid }, BR: { left: Rr, top: bot },
       TL: { left: L, top: top }, ML: { left: L, top: mid }, BL: { left: L, top: bot },
@@ -989,7 +989,7 @@ class Component extends DCLogic {
     const lens = cols.map((s) => [...s].length);
     const fs = (this.state.fitFont || 16) * k;
     const charAdv = fs * 1.18;                          // glyph + .18em letter-spacing
-    const padI = 9 * k, padT = 10 * k, gap = 9 * k;     // column padding 10/9px + gap 9px
+    const padI = 4 * k, padT = 10 * k, gap = 9 * k;     // 列の横余白を詰める（4px）
     const colBoxW = fs * 1.15 + padI * 2;               // line-height 1.15 cross-axis + h padding
     const totalW = colBoxW * 3 + gap * 2;
     const areaR = this.anchorRect(this.state.anchor || 'TR');
@@ -999,20 +999,17 @@ class Component extends DCLogic {
       ? this.state.fitTops.map((t) => t * k)
       : [0, H * 0.08, H * 0.16];
     const centerX = (i) => startLeft + totalW - colBoxW / 2 - i * (colBoxW + gap); // row-reverse: 0=right
-    // backdrop: soft radial fade behind each column (matches the screen mask)
+    // backdrop: 縦書き列の幅にぴったり沿う細いぼかし帯
     ctx.save();
-    if (ctx.filter !== undefined) ctx.filter = `blur(${14 * k}px)`;
-    const centerA = pal.darkText ? 0.30 : 0.28;
+    if (ctx.filter !== undefined) ctx.filter = `blur(${9 * k}px)`;
+    const bgA = pal.darkText ? 0.34 : 0.32;
+    ctx.fillStyle = `rgba(${sr},${sg},${sb},${bgA})`;
     cols.forEach((col, i) => {
       const boxH = padT * 2 + charAdv * (lens[i] - 1) + fs;
-      const cx = centerX(i), topY = areaTop + tops[i], cyc = topY + boxH / 2;
-      const rw = colBoxW, rh = boxH, R = Math.max(rw, rh);
-      const g = ctx.createRadialGradient(cx, cyc, R * 0.19, cx, cyc, R * 0.52);
-      g.addColorStop(0, `rgba(${sr},${sg},${sb},${centerA})`);
-      g.addColorStop(0.62, `rgba(${sr},${sg},${sb},${centerA * 0.45})`);
-      g.addColorStop(1, `rgba(${sr},${sg},${sb},0)`);
-      ctx.fillStyle = g;
-      ctx.fillRect(cx - rw / 2 - 18 * k, topY - 18 * k, rw + 36 * k, rh + 36 * k);
+      const cx = centerX(i), topY = areaTop + tops[i];
+      const rw = colBoxW;
+      this.roundRect(ctx, cx - rw / 2, topY, rw, boxH, 7 * k);
+      ctx.fill();
     });
     ctx.restore();
     // text
@@ -1232,11 +1229,11 @@ class Component extends DCLogic {
     const pal = this.haikuPalette();
     // minimal blurred backdrop hugging each column (no wide strip)
     const [br, bg, bb] = pal.scrimRGB;
-    const fade = 'radial-gradient(ellipse 72% 82% at 50% 50%, #000 38%, rgba(0,0,0,0.35) 70%, transparent 100%)';
+    const fade = 'radial-gradient(ellipse 64% 88% at 50% 50%, #000 46%, rgba(0,0,0,0.32) 74%, transparent 100%)';
     const colBg = {
-      background: `rgba(${br},${bg},${bb},${pal.darkText ? 0.3 : 0.28})`,
-      backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-      borderRadius: '10px', padding: '10px 9px',
+      background: `rgba(${br},${bg},${bb},${pal.darkText ? 0.32 : 0.30})`,
+      backdropFilter: 'blur(13px)', WebkitBackdropFilter: 'blur(13px)',
+      borderRadius: '8px', padding: '10px 4px',
       maskImage: fade, WebkitMaskImage: fade
     };
     const scrimStyle = { display:'none' };
