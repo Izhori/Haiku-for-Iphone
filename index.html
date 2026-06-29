@@ -37,9 +37,9 @@
   <div style="position:absolute; inset:0; background-image:{{ grainBg }}; opacity:.6; pointer-events:none; mix-blend-mode:multiply;"></div>
   <div style="position:absolute; top:0; bottom:0; left:6%; width:1px; background:linear-gradient(#23201a00, #23201a14 18%, #23201a14 82%, #23201a00); pointer-events:none;"></div>
 
-  <div style="position:relative; width:min(94vw,440px); margin:auto; display:flex; flex-direction:column; align-items:center; gap:clamp(12px,2.4vh,22px); z-index:1;">
+  <div ref="{{ outerRef }}" style="position:relative; width:min(94vw,440px); margin:auto; display:flex; flex-direction:column; align-items:center; gap:clamp(12px,2.4vh,22px); z-index:1;">
 
-    <div style="position:relative; width:auto; max-width:100%; height:min(58vh,520px); aspect-ratio:4/5; background:#1b1813; border-radius:3px; overflow:hidden; box-shadow:0 1px 0 rgba(255,255,255,.5), 0 18px 40px -18px rgba(20,16,10,.55), 0 0 0 1px rgba(35,32,25,.22);">
+    <div style="{{ frameStyle }}">
 
       <video ref="{{ videoRef }}" autoplay="" muted="" playsinline="" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; background:#1b1813; transform:{{ videoFlip }};"></video>
 
@@ -55,10 +55,10 @@
 
       <sc-if value="{{ isResult }}" hint-placeholder-val="{{ false }}">
         <div style="position:absolute; inset:0;">
-          <div style="position:absolute; top:0; bottom:0; right:0; width:36%; background:linear-gradient(90deg, rgba(243,238,226,.0), rgba(243,238,226,.78) 22%, rgba(243,238,226,.88)); backdrop-filter:blur(1px);"></div>
-          <div style="position:absolute; top:0; bottom:0; right:36%; width:1px; background:rgba(35,32,25,.4);"></div>
-          <div style="position:absolute; top:7%; bottom:7%; right:0; width:36%; display:flex; align-items:flex-start; justify-content:center;">
-            <div style="writing-mode:vertical-rl; height:100%; display:flex; flex-direction:row-reverse; gap:9px; font-family:'Shippori Mincho',serif; font-weight:600; font-size:24px; line-height:1.15; letter-spacing:.18em; color:#1c1a14;">
+          
+          
+          <div ref="{{ colAreaRef }}" style="{{ colAreaStyle }}">
+            <div ref="{{ textWrapRef }}" style="{{ haikuTextStyle }}">
               <sc-for list="{{ haikuColumns }}" as="col" hint-placeholder-count="3">
                 <div style="{{ col.style }}">{{ col.text }}</div>
               </sc-for>
@@ -86,7 +86,7 @@
             <path d="M12 11 v-4 M10 8.5 l2 -2 2 2" stroke="{{ seal }}"></path>
           </svg>
           <div style="font-family:'Shippori Mincho',serif; font-size:17px; letter-spacing:.14em; color:#f6f1e6;">撮って、詠む</div>
-          <div style="font-size:11.5px; line-height:1.95; letter-spacing:.06em; color:rgba(246,241,230,.72); max-width:240px;">{{ errorMsg }}</div>
+          
           <div style="display:flex; gap:11px; margin-top:6px; flex-wrap:wrap; justify-content:center;">
             <label style="display:inline-flex; align-items:center; gap:6px; font-size:12px; letter-spacing:.12em; color:#f6f1e6; background:{{ seal }}; padding:12px 20px; border-radius:2px; cursor:pointer; min-height:44px; box-sizing:border-box;">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f6f1e6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
@@ -99,7 +99,7 @@
             </label>
           </div>
         </div>
-        <button onClick="{{ retryCamera }}" style="position:absolute; bottom:22px; left:50%; transform:translateX(-50%); font-family:inherit; font-size:11px; letter-spacing:.16em; color:rgba(246,241,230,.7); background:none; border:none; padding:8px 12px; cursor:pointer; text-decoration:underline; text-underline-offset:3px; min-height:40px;">ライブカメラを使う</button>
+        
       </sc-if>
 
     </div>
@@ -133,12 +133,13 @@
       <sc-if value="{{ isResult }}" hint-placeholder-val="{{ false }}">
         <div style="display:flex; flex-direction:column; align-items:center; gap:14px; animation:fadeIn .6s .3s both;">
           <sc-if value="{{ aiFailed }}" hint-placeholder-val="{{ false }}">
-            <div onClick="{{ openSettings }}" style="max-width:330px; font-family:'Zen Kaku Gothic New',sans-serif; font-size:11px; line-height:1.7; color:#8a3a2e; background:rgba(178,58,46,.08); border:1px solid rgba(178,58,46,.28); border-radius:3px; padding:9px 12px; text-align:center; cursor:pointer;">AIで詠めませんでした。設定を確認してください。<br><span style="color:#9a9081;">{{ aiErrorMsg }}</span></div>
+            <div onClick="{{ openSettings }}" style="max-width:330px; font-family:'Zen Kaku Gothic New',sans-serif; font-size:11px; line-height:1.7; color:#8a3a2e; background:rgba(178,58,46,.08); border:1px solid rgba(178,58,46,.28); border-radius:3px; padding:9px 12px; text-align:center; cursor:pointer;">AIで詠めませんでした。設定を確認してください。<br></div>
           </sc-if>
           <div style="font-family:'Shippori Mincho',serif; font-size:12px; letter-spacing:.28em; color:#7a7060;">季語　{{ kigo }}</div>
-          <div style="display:flex; gap:14px;">
-            <button onClick="{{ retake }}" style="font-family:'Shippori Mincho',serif; font-size:14px; letter-spacing:.16em; color:#23201a; background:none; border:1px solid #23201a55; padding:11px 22px; border-radius:2px; cursor:pointer;">もう一度</button>
-            <button onClick="{{ saveWork }}" style="font-family:'Shippori Mincho',serif; font-size:14px; letter-spacing:.16em; color:#f6f1e6; background:#23201a; border:1px solid #23201a; padding:11px 24px; border-radius:2px; cursor:pointer;">作品を保存</button>
+          <div style="display:flex; gap:11px; flex-wrap:wrap; justify-content:center;">
+            <button onClick="{{ retake }}" style="font-family:'Shippori Mincho',serif; font-size:14px; letter-spacing:.16em; color:#23201a; background:none; border:1px solid #23201a55; padding:11px 20px; border-radius:2px; cursor:pointer;">もう一度</button>
+            <button onClick="{{ openExplain }}" style="display:inline-flex; align-items:center; gap:6px; font-family:'Shippori Mincho',serif; font-size:14px; letter-spacing:.16em; color:#23201a; background:none; border:1px solid #23201a55; padding:11px 20px; border-radius:2px; cursor:pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#23201a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h12M4 10h9M4 15h12M4 20h7"></path></svg>解説</button>
+            <button onClick="{{ saveWork }}" style="font-family:'Shippori Mincho',serif; font-size:14px; letter-spacing:.16em; color:#f6f1e6; background:#23201a; border:1px solid #23201a; padding:11px 22px; border-radius:2px; cursor:pointer;">{{ saveWorkLabel }}</button>
           </div>
         </div>
       </sc-if>
@@ -146,6 +147,11 @@
     </div>
 
   </div>
+
+  <button onClick="{{ openGallery }}" aria-label="作品を見る" style="position:absolute; top:16px; left:16px; z-index:20; display:flex; align-items:center; gap:7px; font-family:'Zen Kaku Gothic New',sans-serif; font-size:11px; letter-spacing:.12em; color:#5e564a; background:rgba(246,241,230,.7); border:1px solid rgba(35,32,25,.16); border-radius:999px; padding:7px 13px; cursor:pointer; backdrop-filter:blur(2px);">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5e564a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 15l5-4 4 3 5-5 4 3"></path><circle cx="8.5" cy="8.5" r="1.5"></circle></svg>
+    <span style="white-space:nowrap;">作品を見る</span>
+  </button>
 
   <button onClick="{{ openSettings }}" aria-label="AI設定" style="position:absolute; top:16px; right:16px; z-index:20; display:flex; align-items:center; gap:8px; font-family:'Zen Kaku Gothic New',sans-serif; font-size:11px; letter-spacing:.12em; color:#5e564a; background:rgba(246,241,230,.7); border:1px solid rgba(35,32,25,.16); border-radius:999px; padding:7px 13px 7px 11px; cursor:pointer; backdrop-filter:blur(2px);">
     <span style="width:7px; height:7px; border-radius:50%; background:{{ aiDot }};"></span>
@@ -170,6 +176,26 @@
             <span style="{{ switchKnob }}"></span>
           </button>
         </div>
+
+        <div style="padding:15px 0 4px; border-top:1px solid rgba(35,32,25,.12);">
+          <div style="font-family:'Shippori Mincho',serif; font-size:15px; letter-spacing:.06em; margin-bottom:3px;">句のテイスト</div>
+          <div style="font-size:11px; line-height:1.8; color:#9a9081; margin-bottom:11px;">{{ tasteDesc }}</div>
+          <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:7px;">
+            <sc-for list="{{ tasteOptions }}" as="opt" hint-placeholder-count="4">
+              <button onClick="{{ opt.select }}" style="{{ opt.style }}">{{ opt.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <sc-if value="{{ hasFS }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 0; border-top:1px solid rgba(35,32,25,.12);">
+            <div>
+              <div style="font-family:'Shippori Mincho',serif; font-size:15px; letter-spacing:.06em;">保存先フォルダ</div>
+              <div style="font-size:11px; color:#9a9081; margin-top:2px;">{{ folderStatus }}</div>
+            </div>
+            <button onClick="{{ chooseFolder }}" style="flex-shrink:0; font-family:'Zen Kaku Gothic New',sans-serif; font-size:11px; letter-spacing:.08em; color:#23201a; background:none; border:1px solid rgba(35,32,25,.3); padding:8px 14px; border-radius:999px; cursor:pointer;">{{ folderBtnLabel }}</button>
+          </div>
+        </sc-if>
 
         <div style="padding:15px 0 4px; border-top:1px solid rgba(35,32,25,.12);">
           <div style="font-family:'Shippori Mincho',serif; font-size:15px; letter-spacing:.06em; margin-bottom:3px;">Anthropic APIキー</div>
@@ -200,29 +226,162 @@
     </div>
   </sc-if>
 
+  <sc-if value="{{ showExplain }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute; inset:0; z-index:35; background:#ece4d4; display:flex; flex-direction:column; font-family:'Zen Kaku Gothic New',sans-serif; color:#23201a;">
+      <div style="position:absolute; inset:0; background-image:{{ grainBg }}; opacity:.5; pointer-events:none; mix-blend-mode:multiply;"></div>
+
+      <div style="position:relative; z-index:2; display:flex; align-items:center; justify-content:space-between; padding:13px 16px; border-bottom:1px solid rgba(35,32,25,.14);">
+        <div style="display:flex; align-items:baseline; gap:10px;">
+          <div style="font-family:'Shippori Mincho',serif; font-weight:700; font-size:19px; letter-spacing:.16em;">解説</div>
+          <div style="font-family:'Shippori Mincho',serif; font-size:11px; letter-spacing:.24em; color:#7a7060;">季語　{{ kigo }}</div>
+        </div>
+        <button onClick="{{ closeExplain }}" aria-label="閉じる" style="display:inline-flex; align-items:center; gap:6px; font-family:'Zen Kaku Gothic New',sans-serif; font-size:11px; letter-spacing:.1em; color:#5e564a; background:rgba(246,241,230,.7); border:1px solid rgba(35,32,25,.18); border-radius:999px; padding:7px 13px; cursor:pointer;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5e564a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+          <span style="white-space:nowrap;">閉じる</span>
+        </button>
+      </div>
+
+      <div style="position:relative; z-index:2; flex:1; min-height:0; display:flex;">
+
+        <div style="width:50%; min-width:0; overflow:auto; padding:18px 16px 22px; border-right:1px solid rgba(35,32,25,.14);">
+          <sc-if value="{{ explainLoading }}" hint-placeholder-val="{{ true }}">
+            <div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; color:#7a7060;">
+              <svg width="100" height="50" viewBox="0 0 120 60" fill="none"><path d="M10 40 C 30 12, 50 12, 60 30 S 92 48, 110 18" stroke="#7a7060" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="220" style="animation:brushSweep 1.6s ease-in-out infinite;"></path></svg>
+              <div style="font-family:'Shippori Mincho',serif; font-size:13px; letter-spacing:.28em; text-indent:.28em;">綴っています…</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ explainReady }}" hint-placeholder-val="{{ false }}">
+            <div style="font-family:'Shippori Mincho',serif; font-size:14px; line-height:2.05; text-align:justify; white-space:pre-wrap; animation:fadeIn .5s both;">{{ explainText }}</div>
+          </sc-if>
+        </div>
+
+        <div style="width:50%; min-width:0; display:flex; flex-direction:column;">
+          <div style="height:50%; overflow:hidden; background:#1b1813;">
+            <img ref="{{ explainStillRef }}" alt="" style="display:block; width:100%; height:100%; object-fit:cover; background:#1b1813;">
+          </div>
+          <div style="height:50%; display:flex; align-items:center; justify-content:center; padding:16px; border-top:1px solid rgba(35,32,25,.14); background:#e6ddcb;">
+            <div style="display:flex; flex-direction:row-reverse; gap:10px; align-items:flex-start; justify-content:center; max-height:84%; font-family:'Shippori Mincho',serif; font-weight:600; font-size:clamp(15px,3.6vw,24px); line-height:1.16; letter-spacing:.18em; color:#23201a;">
+              <sc-for list="{{ explainColumns }}" as="col" hint-placeholder-count="3">
+                <div style="{{ col.style }}">{{ col.text }}</div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showGallery }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeGallery }}" style="position:absolute; inset:0; z-index:30; background:rgba(20,16,10,.5); display:flex; align-items:center; justify-content:center; padding:18px; backdrop-filter:blur(2px);">
+      <div onClick="{{ stop }}" style="width:min(94vw,440px); max-height:86vh; overflow:auto; background:#f3eee2; border-radius:4px; box-shadow:0 24px 60px -20px rgba(20,16,10,.6); padding:22px 20px; font-family:'Zen Kaku Gothic New',sans-serif; color:#23201a;">
+        <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:4px;">
+          <div style="font-family:'Shippori Mincho',serif; font-weight:700; font-size:21px; letter-spacing:.1em;">作品集</div>
+          <div style="font-size:11px; color:#9a9081;">{{ galleryCount }}</div>
+        </div>
+        <div style="font-size:11.5px; line-height:1.8; color:#7a7060; margin-bottom:16px;">「作品を保存」した句がここに並びます。</div>
+
+        <sc-if value="{{ galleryEmpty }}" hint-placeholder-val="{{ true }}">
+          <div style="padding:34px 10px; text-align:center; color:#9a9081; font-family:'Shippori Mincho',serif; font-size:14px; line-height:2;">まだ作品がありません。<br>一句詠んで「作品を保存」してみましょう。</div>
+        </sc-if>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">{{ galleryGrid }}</div>
+
+        <button onClick="{{ closeGallery }}" style="margin-top:20px; width:100%; font-family:'Shippori Mincho',serif; font-size:14px; letter-spacing:.12em; color:#23201a; background:none; border:1px solid rgba(35,32,25,.3); padding:11px 0; border-radius:2px; cursor:pointer;">閉じる</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ viewerSrc }}" hint-placeholder-val="">
+    <div onClick="{{ closeViewer }}" style="position:absolute; inset:0; z-index:40; background:rgba(12,10,7,.88); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; gap:16px;">
+      {{ viewerImg }}
+      <div style="display:flex; gap:12px;">
+        <button onClick="{{ saveViewer }}" style="font-family:'Shippori Mincho',serif; font-size:13px; letter-spacing:.14em; color:#1c1a14; background:#f3eee2; border:none; padding:10px 20px; border-radius:2px; cursor:pointer;">保存</button>
+        <button onClick="{{ closeViewer }}" style="font-family:'Shippori Mincho',serif; font-size:13px; letter-spacing:.14em; color:#f6f1e6; background:none; border:1px solid rgba(246,241,230,.5); padding:10px 20px; border-radius:2px; cursor:pointer;">閉じる</button>
+      </div>
+    </div>
+  </sc-if>
+
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;sealKanji&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;句&quot;,&quot;options&quot;:[&quot;句&quot;,&quot;詠&quot;,&quot;写&quot;,&quot;雅&quot;,&quot;風&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;落款&quot;},&quot;sealColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#b23a2e&quot;,&quot;options&quot;:[&quot;#b23a2e&quot;,&quot;#9c2b2b&quot;,&quot;#3a4a3f&quot;,&quot;#23201a&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;落款&quot;},&quot;grain&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;質感&quot;}}">
 class Component extends DCLogic {
-  state = { phase: 'camera', stillSrc: '', haiku: null, errorMsg: '', flash: 0, facing: 'environment',
-    showSettings: false, useAI: true, apiKey: '', apiModel: 'claude-sonnet-4-20250514', keyDraft: '', saved: false };
+  state = { phase: 'camera', stillSrc: '', haiku: null, errorMsg: '', flash: 0, facing: 'environment', frameAspect: 4 / 5, frameW: 0, frameH: 0,
+    showSettings: false, showGallery: false, gallery: [], viewerSrc: '', anchor: 'MR', useAI: true, apiKey: '', apiModel: 'claude-sonnet-4-20250514', keyDraft: '', saved: false, taste: 'auto',
+    showExplain: false, explainText: '', explainLoading: false };
+
+  haikuKey() { const h = this.state.haiku; return h ? (h.jou + h.chu + h.ge) : ''; }
+
+  openExplain = () => {
+    const fresh = this._explainFor === this.haikuKey() && !!this.state.explainText;
+    this.setState({ showExplain: true });
+    if (!fresh) this.generateExplain();
+  };
+  closeExplain = () => this.setState({ showExplain: false });
+
+  localExplain(h) {
+    const kigo = (h.kigo && h.kigo !== '—') ? h.kigo : '';
+    return (kigo ? `季語は「${kigo}」。その季節の気配を一句の軸に据えています。\n\n` : '')
+      + `「${h.jou}／${h.chu}／${h.ge}」。上五が情景の場を立て、中七でものが動き、下五で余韻を残す——五・七・五の調べに、写真に写った一瞬の空気が写し取られています。\n\n`
+      + `目に映ったものを言葉へ置きかえるとき、説明には現れない季節の移ろいや心の機微が、静かに立ちのぼってきます。`;
+  }
+
+  async generateExplain() {
+    const h = this.state.haiku; if (!h) return;
+    this.setState({ explainLoading: true, explainText: '' });
+    let text = '';
+    if (this.aiEnabled()) {
+      try {
+        const ku = `${h.jou}　${h.chu}　${h.ge}`;
+        const out = await this.withTimeout(this.aiComplete([{ role: 'user', content:
+          `次の俳句について、やさしい鑑賞の解説文を書いてください。\n\n` +
+          `【句】${ku}\n【季語】${h.kigo || '—'}\n` +
+          (this.lastDesc ? `【背景となった写真】${this.lastDesc}\n` : '') +
+          `\n【書き方】\n- 季語と季節、句に詠まれた情景をやさしく説明する。\n- 切れ・表現の工夫や、込められた心情・余情を読み解く。\n- 写真と句のつながりにも触れる。\n- 全体で200〜300字、2〜3の短い段落に分け、段落間は空行で区切る。\n- 前置きや見出しは不要、本文のみ。日本語のみ。`
+        }], 600), 30000);
+        text = (out || '').replace(/^#.*$/gm, '').replace(/\*\*/g, '').trim();
+      } catch (e) { text = ''; }
+    }
+    if (!text) text = this.localExplain(h);
+    this._explainFor = this.haikuKey();
+    this.setState({ explainText: text, explainLoading: false });
+  }
+
+  setTaste = (k) => { try { localStorage.setItem('shaku_taste', k); } catch (e) {} this.setState({ taste: k }); };
+
+  tasteInstruction() {
+    switch (this.state.taste) {
+      case 'real': return '【テイスト：写実的】見たままを客観写生で描く。即物的に具体物・情景を写し取り、感情の述懐や説明は避け、もので語る。';
+      case 'emotion': return '【テイスト：情緒的】情景に心情や余情をにじませる。しみじみとした情趣・感慨を一つ効かせ、しっとりと詠む。';
+      case 'philo': return '【テイスト：哲学的】無常・時間・存在など普遍的な思索を一句に込める。情景を通して静かな気づきや問いを示す。';
+      default: return '【テイスト：おまかせ】写真の情景に最もふさわしいテイストを選び、自由に詠む。';
+    }
+  }
 
   constructor(props) {
     super(props);
     this.videoRef = React.createRef();
     this.fileRef = React.createRef();
     this.stillRef = React.createRef();
+    this.colAreaRef = React.createRef();
+    this.textWrapRef = React.createRef();
+    this.outerRef = React.createRef();
+    this.explainStillRef = React.createRef();
     this.sceneHints = '';
+    this._onResize = () => this.computeFrameSize();
     try {
-      const k = localStorage.getItem('shaku_api_key') || '';
+      let k = (localStorage.getItem('shaku_api_key') || '').replace(/\s+/g, '');
+      if (k && !(/^sk-ant-/.test(k) && k.length >= 40)) k = '';  // drop invalid/test keys
       const ua = localStorage.getItem('shaku_use_ai');
       const m = localStorage.getItem('shaku_api_model') || 'claude-sonnet-4-20250514';
-      this.state = { ...this.state, apiKey: k, keyDraft: k, apiModel: m, useAI: ua == null ? true : ua === '1' };
+      let taste = localStorage.getItem('shaku_taste') || 'auto';
+      if (!['real', 'emotion', 'philo', 'auto'].includes(taste)) taste = 'auto';
+      this.state = { ...this.state, apiKey: k, keyDraft: k, apiModel: m, useAI: ua == null ? true : ua === '1', taste };
     } catch (e) {}
   }
 
   hasBuiltinAI() { return !!(typeof window !== 'undefined' && window.claude && window.claude.complete); }
-  hasAI() { return this.hasBuiltinAI() || !!(this.state.apiKey || '').trim(); }
+  hasAI() { return this.hasBuiltinAI() || this.keyLooksValid(this.cleanKey(this.state.apiKey)); }
   aiEnabled() { return this.state.useAI && this.hasAI(); }
 
   openSettings = () => this.setState({ showSettings: true, keyDraft: this.state.apiKey, saved: false });
@@ -273,17 +432,78 @@ class Component extends DCLogic {
     }
   };
 
-  componentDidMount() { this.startCamera(); this.syncStill(); }
-  componentDidUpdate() { this.syncStill(); }
+  componentDidMount() { this.computeFrameSize(); this.startCamera(); this.syncStill(); this.fitHaiku(); this.fitWhenFontsReady(); window.addEventListener('resize', this._onResize); this.loadFolderName(); this.loadGalleryAsync().then((g) => this.setState({ gallery: g })); }
+  componentDidUpdate() { this.syncStill(); this.fitHaiku(); }
+
+  computeFrameSize() {
+    const wrap = this.outerRef.current;
+    if (!wrap) return;
+    const availW = wrap.clientWidth || 360;
+    const availH = Math.min((window.innerHeight || 700) * 0.58, 520);
+    const A = this.state.frameAspect || (4 / 5);
+    let W = availW, H = W / A;
+    if (H > availH) { H = availH; W = H * A; }
+    W = Math.round(W); H = Math.round(H);
+    if (W !== this.state.frameW || H !== this.state.frameH) this.setState({ frameW: W, frameH: H });
+  }
+
+  setFrameAspect(A) {
+    if (!A || !isFinite(A)) return;
+    A = Math.max(0.6, Math.min(1.9, A));   // clamp extremes
+    if (Math.abs(A - this.state.frameAspect) > 0.001) this.setState({ frameAspect: A }, () => this.computeFrameSize());
+    else this.computeFrameSize();
+  }
+
+  fitWhenFontsReady() {
+    try { if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { this._fitKey = null; this.fitHaiku(); }); } catch (e) {}
+  }
+
+  // 初句→二句は「開始位置」を、二句→結句は「下端」を階段状に下げる
+  fitHaiku() {
+    if (this.state.phase !== 'result') { if (this._fitKey) this._fitKey = null; return; }
+    const area = this.colAreaRef.current;
+    const h = this.state.haiku;
+    if (!area || !h) return;
+    const availH = area.clientHeight, availW = area.clientWidth;
+    if (availH < 20 || availW < 10) return;
+    const Lj = [...h.jou].length, Lc = [...h.chu].length, Lg = [...h.ge].length;
+    const T0 = availH * 0.01;            // 初句の上端
+    const step = availH * 0.10;          // 階段の段差
+    // bottom_ge = T0 + 2*step + Lc*charH (下端基準)  must be <= availH*0.96
+    // bottom_jou = T0 + Lj*charH ; bottom_chu = T0 + step + Lc*charH
+    let fH = Infinity;
+    [
+      (availH * 0.96 - T0) / (Lj * 1.18),                    // 初句が収まる
+      (availH * 0.96 - T0 - step) / (Lc * 1.18),             // 二句が収まる
+      (availH * 0.96 - T0 - 2 * step) / (Lc * 1.18)          // 結句下端(=二句下端+step)が収まる
+    ].forEach(f => { if (f < fH) fH = f; });
+    const gap = 9, fW = (availW - gap * 2) / (3 * 1.18);
+    let next = Math.floor(Math.min(fH, fW) * 0.96 * 0.7 * 1.73);
+    next = Math.max(10, Math.min(38, next));
+    const charH = next * 1.18;
+    const topJou = Math.round(T0);
+    const topChu = Math.round(T0 + step);
+    const bottomChu = topChu + Lc * charH;
+    const topGe = Math.max(0, Math.round(bottomChu + step - Lg * charH));
+    const tops = [topJou, topChu, topGe];
+    const key = (h.jou + h.chu + h.ge) + '|' + availH + 'x' + availW;
+    const sameTops = this.state.fitTops && this.state.fitTops.join(',') === tops.join(',');
+    if (this._fitKey !== key || this.state.fitFont !== next || !sameTops) {
+      this._fitKey = key;
+      if (this.state.fitFont !== next || !sameTops) this.setState({ fitFont: next, fitTops: tops });
+    }
+  }
 
   syncStill() {
-    const el = this.stillRef.current;
-    if (!el) return;
+    const els = [this.stillRef.current, this.explainStillRef.current];
     const src = this.state.stillSrc;
-    if (src) { if (el.getAttribute('src') !== src) el.setAttribute('src', src); }
-    else if (el.hasAttribute('src')) el.removeAttribute('src');
+    for (const el of els) {
+      if (!el) continue;
+      if (src) { if (el.getAttribute('src') !== src) el.setAttribute('src', src); }
+      else if (el.hasAttribute('src')) el.removeAttribute('src');
+    }
   }
-  componentWillUnmount() { this.stopStream(); }
+  componentWillUnmount() { this.stopStream(); window.removeEventListener('resize', this._onResize); }
 
   stopStream() {
     if (this.stream) { try { this.stream.getTracks().forEach(t => t.stop()); } catch (e) {} this.stream = null; }
@@ -303,7 +523,13 @@ class Component extends DCLogic {
       this.stopStream();
       this.stream = stream;
       const v = this.videoRef.current;
-      if (v) { v.srcObject = stream; v.setAttribute('playsinline', ''); await v.play().catch(() => {}); }
+      if (v) {
+        v.srcObject = stream; v.setAttribute('playsinline', '');
+        await v.play().catch(() => {});
+        // set the live aspect once, when known, to avoid repeated re-renders that can pause iOS video
+        if (v.videoWidth) this.setFrameAspect(v.videoWidth / v.videoHeight);
+        else v.onloadedmetadata = () => { if (v.videoWidth) this.setFrameAspect(v.videoWidth / v.videoHeight); };
+      }
       this.setState({ phase: 'camera', errorMsg: '' });
     } catch (e) {
       let policyBlocked = false;
@@ -330,9 +556,11 @@ class Component extends DCLogic {
     if (!f || !/^image\//.test(f.type)) return;
     const img = new Image();
     img.onload = () => {
-      const { dataUrl, apiDataUrl, hints } = this.cropToWork(img, img.naturalWidth, img.naturalHeight);
+      const { dataUrl, apiDataUrl, hints, aspect } = this.processImage(img, img.naturalWidth, img.naturalHeight);
       this.sceneHints = hints;
-      this.setState({ stillSrc: dataUrl, phase: 'generating', dragOver: false });
+      const anchor = this.pickAnchor(); this.applyAnchorPalette(anchor);
+      this.setFrameAspect(aspect);
+      this.setState({ stillSrc: dataUrl, phase: 'generating', dragOver: false, anchor });
       this.generate(apiDataUrl);
     };
     img.src = URL.createObjectURL(f);
@@ -342,23 +570,69 @@ class Component extends DCLogic {
   onDragLeave = (e) => { e.preventDefault(); if (this.state.dragOver) this.setState({ dragOver: false }); };
   onDrop = (e) => { e.preventDefault(); const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; this.handleImageFile(f); };
 
-  // crop the source to 4:5 portrait and return {dataUrl, hints}
-  cropToWork(srcEl, sw, sh, mirror) {
-    const ratio = 4 / 5, W = 864, H = 1080;
+  // ---- haiku placement: choose the emptiest of 7 anchors so text avoids the subject ----
+  anchorRect(key) {
+    const W = 0.36, Htall = 0.62, top = 0.03, mid = 0.20, bot = 0.35, L = 0.03, Rr = 0.61, Cx = 0.32;
+    const M = {
+      TR: { left: Rr, top: top }, MR: { left: Rr, top: mid }, BR: { left: Rr, top: bot },
+      TL: { left: L, top: top }, ML: { left: L, top: mid }, BL: { left: L, top: bot },
+      TC: { left: Cx, top: top }
+    };
+    const a = M[key] || M.MR;
+    return { left: a.left, top: a.top, w: W, h: Htall };
+  }
+  anchorKeys() { return ['TR', 'MR', 'BR', 'TL', 'ML', 'BL', 'TC']; }
+
+  regionStats(rect) {
+    const s = this.gridS || 0, busy = this.busyMap, lum = this.lumGrid, skin = this.skinMap;
+    if (!s || !busy) return { busy: 0, lum: 200, std: 0, skin: 0 };
+    const x0 = Math.max(0, Math.floor(rect.left * s)), x1 = Math.min(s, Math.ceil((rect.left + rect.w) * s));
+    const y0 = Math.max(0, Math.floor(rect.top * s)), y1 = Math.min(s, Math.ceil((rect.top + rect.h) * s));
+    let b = 0, l = 0, n = 0, sk = 0; const ls = [];
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) { const i = y * s + x; b += busy[i]; l += lum[i]; ls.push(lum[i]); if (skin) sk += skin[i]; n++; }
+    if (!n) return { busy: 0, lum: 200, std: 0, skin: 0 };
+    const meanL = l / n; let v = 0; for (const q of ls) v += (q - meanL) * (q - meanL);
+    return { busy: b / n, lum: meanL, std: Math.sqrt(v / n), skin: sk / n };
+  }
+
+  pickAnchor() {
+    if (!this.busyMap) return 'MR';
+    let best = 'MR', bestScore = Infinity;
+    for (const k of this.anchorKeys()) {
+      const st = this.regionStats(this.anchorRect(k));
+      // strongly avoid people (skin); then prefer the emptiest area; tiny bias to the classic right side
+      const bias = (k === 'MR' || k === 'TR' || k === 'BR') ? 0.92 : 1.0;
+      const score = (st.busy + st.skin * 900) * bias;
+      if (score < bestScore) { bestScore = score; best = k; }
+    }
+    return best;
+  }
+
+  applyAnchorPalette(key) {
+    // refresh the text-area luminance/std for the chosen region so colors adapt
+    const st = this.regionStats(this.anchorRect(key));
+    if (this.scene) { this.scene.rightLum = st.lum; this.scene.rightStd = st.std; }
+  }
+
+  // keep the full image (no side trimming); fit within a max box, return its aspect
+  processImage(srcEl, sw, sh, mirror) {
+    let A = sw / sh;
+    A = Math.max(0.6, Math.min(1.9, A));   // clamp extreme panoramas
+    const MAXD = 1200;
+    let W, H;
+    if (A >= 1) { W = MAXD; H = Math.round(MAXD / A); } else { H = MAXD; W = Math.round(MAXD * A); }
     const canvas = document.createElement('canvas');
     canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext('2d');
-    let cw = sw, ch = sw / ratio;
-    if (ch > sh) { ch = sh; cw = sh * ratio; }
-    const cx = (sw - cw) / 2, cy = (sh - ch) / 2;
     if (mirror) { ctx.translate(W, 0); ctx.scale(-1, 1); }
-    ctx.drawImage(srcEl, cx, cy, cw, ch, 0, 0, W, H);
+    ctx.drawImage(srcEl, 0, 0, sw, sh, 0, 0, W, H);   // full frame, scaled to fill (no crop)
     if (mirror) { ctx.setTransform(1, 0, 0, 1, 0, 0); }
     // downscaled copy for the vision API (faster upload)
-    const aw = 512, ah = 640;
+    const scale = Math.min(1, 560 / Math.max(W, H));
+    const aw = Math.round(W * scale), ah = Math.round(H * scale);
     const ac = document.createElement('canvas'); ac.width = aw; ac.height = ah;
     ac.getContext('2d').drawImage(canvas, 0, 0, aw, ah);
-    return { dataUrl: canvas.toDataURL('image/jpeg', 0.82), apiDataUrl: ac.toDataURL('image/jpeg', 0.72), hints: this.analyze(ctx, W, H) };
+    return { dataUrl: canvas.toDataURL('image/jpeg', 0.82), apiDataUrl: ac.toDataURL('image/jpeg', 0.72), hints: this.analyze(ctx, W, H), aspect: A };
   }
 
   rgbToHsl(r, g, b) {
@@ -428,21 +702,58 @@ class Component extends DCLogic {
       if (snow) els.push('白く明るい（雪・曇天・室内光）');
       if (sunset) els.push('夕暮れのような暖色光');
       const cols = Object.entries(hueCount).sort((a, b) => b[1] - a[1]).slice(0, 3).map(e => e[0]);
-      this.scene = { bright, warm, sat, skyTop, green, person, dark, snow, sunset, cols };
+      // luminance grid + edge-energy (busyness) map for placement
+      const lumGrid = new Float32Array(N);
+      for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) { const [r, g, b] = at(x, y); lumGrid[y * s + x] = 0.299 * r + 0.587 * g + 0.114 * b; }
+      const busy = new Float32Array(N);
+      for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) {
+        const c = lumGrid[y * s + x];
+        const rx = lumGrid[y * s + Math.min(s - 1, x + 1)], dy = lumGrid[Math.min(s - 1, y + 1) * s + x];
+        busy[y * s + x] = Math.abs(c - rx) + Math.abs(c - dy);
+      }
+      this.gridS = s; this.lumGrid = lumGrid; this.busyMap = busy;
+      // skin/person map (per cell) so placement can avoid people
+      const skinMap = new Float32Array(N);
+      for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) {
+        const [r, g, b] = at(x, y);
+        const isSkin = (r > 95 && g > 40 && b > 20 && r > g && g >= b && (r - b) > 14 && (r - g) < 80) ? 1 : 0;
+        skinMap[y * s + x] = isSkin;
+      }
+      this.skinMap = skinMap;
+      // luminance of the right strip (where the vertical haiku sits) for adaptive text
+      let rL = 0, rN = 0, rWarm = 0; const lums = [];
+      const x0 = Math.floor(s * 0.6);
+      for (let y = 0; y < s; y++) for (let x = x0; x < s; x++) {
+        const [r, g, b] = at(x, y); const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+        rL += lum; lums.push(lum); rN++; if (r >= b) rWarm++;
+      }
+      const rightLum = rN ? rL / rN : bright;
+      let varSum = 0; for (const l of lums) varSum += (l - rightLum) * (l - rightLum);
+      const rightStd = lums.length ? Math.sqrt(varSum / lums.length) : 0;
+      this.scene = { bright, warm, sat, skyTop, green, person, dark, snow, sunset, cols, rightLum, rightStd, rightWarm: rWarm > rN / 2 };
       this._lum = bright; this._warm = warm;
       return `主な色: ${cols.join('・')}。明るさ: ${dark ? '暗い' : bright > 175 ? '明るい' : '中間'}、色温度: ${warm ? '暖色寄り' : '寒色寄り'}、彩度: ${sat > 0.34 ? '鮮やか' : '落ち着いた'}。`
         + (els.length ? `見える要素: ${els.join('、')}。` : '');
     } catch (e) { return '静かな情景'; }
   }
 
-  capture = () => {
+  capture = (retry) => {
     const v = this.videoRef.current;
-    if (!v || !v.videoWidth) return;
+    if (!v) return;
+    const n = (typeof retry === 'number') ? retry : 0;
+    if (!v.videoWidth) {
+      // video not ready yet — resume playback and retry briefly instead of silently failing
+      try { v.play && v.play().catch(() => {}); } catch (e) {}
+      if (n < 12) { setTimeout(() => this.capture(n + 1), 120); }
+      return;
+    }
     this.setState({ flash: Date.now() });
     const mirror = this.state.facing === 'user';
-    const { dataUrl, apiDataUrl, hints } = this.cropToWork(v, v.videoWidth, v.videoHeight, mirror);
+    const { dataUrl, apiDataUrl, hints, aspect } = this.processImage(v, v.videoWidth, v.videoHeight, mirror);
     this.sceneHints = hints;
-    this.setState({ stillSrc: dataUrl, phase: 'generating' });
+    const anchor = this.pickAnchor(); this.applyAnchorPalette(anchor);
+    this.setFrameAspect(aspect);
+    this.setState({ stillSrc: dataUrl, phase: 'generating', anchor });
     this.generate(apiDataUrl);
   };
 
@@ -465,13 +776,17 @@ class Component extends DCLogic {
     return null;
   }
 
+  keyLooksValid(k) { return /^sk-ant-/.test(k) && k.length >= 40; }
+
   async aiComplete(messages, maxTokens) {
-    const key = this.cleanKey(this.state.apiKey);
-    // Prefer the user's own key when provided (works in New Window / standalone).
-    if (!key && typeof window !== 'undefined' && window.claude && window.claude.complete) {
-      return await window.claude.complete({ messages });
+    const rawKey = this.cleanKey(this.state.apiKey);
+    const key = this.keyLooksValid(rawKey) ? rawKey : '';   // ignore obviously-invalid keys
+    const builtin = (typeof window !== 'undefined' && window.claude && window.claude.complete);
+    // No usable key → use built-in AI if available.
+    if (!key) {
+      if (builtin) return await window.claude.complete({ messages });
+      throw new Error(rawKey ? 'APIキーの形式が正しくありません（sk-ant-… で始まる完全なキーが必要です）' : 'no-key');
     }
-    if (!key) throw new Error('no-key');
     const candidates = this.workingModel
       ? [this.workingModel]
       : [this.state.apiModel || 'claude-sonnet-4-20250514', 'claude-sonnet-4-5-20250929', 'claude-3-7-sonnet-20250219', 'claude-3-5-sonnet-20241022'];
@@ -489,7 +804,10 @@ class Component extends DCLogic {
           },
           body: JSON.stringify({ model, max_tokens: maxTokens || 400, messages })
         });
-      } catch (e) { throw new Error('通信エラー: ' + (e && e.message || e)); }
+      } catch (e) {
+        if (builtin) return await window.claude.complete({ messages });
+        throw new Error('通信エラー: ' + (e && e.message || e));
+      }
       if (res.ok) {
         this.workingModel = model;
         const data = await res.json();
@@ -497,10 +815,14 @@ class Component extends DCLogic {
       }
       let detail = ''; try { detail = await res.text(); } catch (e) {}
       lastErr = 'HTTP ' + res.status + ' ' + detail.slice(0, 160);
-      // retry next model only when the model itself is rejected
       const modelIssue = res.status === 404 || (res.status === 400 && /model/i.test(detail));
-      if (!modelIssue) throw new Error(lastErr);
+      if (!modelIssue) {
+        // key failed (e.g. 401) — fall back to built-in AI when present
+        if (builtin) return await window.claude.complete({ messages });
+        throw new Error(lastErr);
+      }
     }
+    if (builtin) return await window.claude.complete({ messages });
     throw new Error(lastErr || 'モデルを利用できません');
   }
 
@@ -520,7 +842,8 @@ class Component extends DCLogic {
     const out = await this.aiComplete([{ role: 'user', content:
       `あなたは熟練の俳人です。次の写真の描写だけを頼りに、その情景に確かに根ざした俳句を即興で一句詠んでください。\n\n` +
       `【写真の描写】\n${desc}\n\n` +
-      `【条件】\n- 五・七・五。\n- 季語を一つ詠み込む（描写の季節感に合わせる）。\n- 描写に出てくる具体物・場所・光・色を必ず句に取り込み、その写真だけの一句にする。どんな写真にも当てはまる一般的・説明的な句は禁止。\n- 比喩や情緒を一つ利かせ、平板な実況にしない。\n- 日本語のみ。\n\n` +
+      `${this.tasteInstruction()}\n\n` +
+      `【条件】\n- 五・七・五。\n- 季語を一つ詠み込む（描写の季節感に合わせる）。\n- 描写に出てくる具体物・場所・光・色を必ず句に取り込み、その写真だけの一句にする。どんな写真にも当てはまる一般的・説明的な句は禁止。\n- 上で指定されたテイストを句の作りに反映する。\n- 日本語のみ。\n\n` +
       `必ず次のJSONのみで返答: {"jou":"上五","chu":"中七","ge":"下五","kigo":"季語"}` }], 200);
     return this.parseHaiku(out);
   }
@@ -545,7 +868,7 @@ class Component extends DCLogic {
         try {
           const out = await this.withTimeout(this.aiComplete([{ role: 'user', content: [
             { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } },
-            { type: 'text', text: `この写真の情景に根ざした俳句を一句。五七五、季語一つ、写る具体物を反映、日本語のみ。JSONのみ: {"jou":"","chu":"","ge":"","kigo":""}` }
+            { type: 'text', text: `この写真の情景に根ざした俳句を一句。五七五、季語一つ、写る具体物を反映、日本語のみ。${this.tasteInstruction()} JSONのみ: {"jou":"","chu":"","ge":"","kigo":""}` }
           ] }], 200), 20000);
           haiku = this.parseHaiku(out);
         } catch (e) { this.aiError = String(e && e.message || e); }
@@ -553,7 +876,7 @@ class Component extends DCLogic {
     }
     const aiFailed = !!(keySet && this.state.useAI && this.aiError && this.aiError !== 'no-key');
     if (!haiku) haiku = this.localHaiku();
-    this.setState({ haiku, phase: 'result', aiFailed, aiErrorMsg: aiFailed ? this.aiError : '' });
+    this.setState({ haiku, phase: 'result', fitFont: null, aiFailed, aiErrorMsg: aiFailed ? this.aiError : '' });
   }
 
   localHaiku() {
@@ -569,53 +892,213 @@ class Component extends DCLogic {
   }
 
   retake = () => {
-    this.setState({ phase: this.stream ? 'camera' : 'camera', haiku: null, stillSrc: '' });
+    this.setState({ phase: this.stream ? 'camera' : 'camera', haiku: null, stillSrc: '', fitFont: null });
     if (!this.stream) this.startCamera();
     else { const v = this.videoRef.current; if (v && v.paused) v.play().catch(() => {}); }
   };
 
-  async saveWork() {
-    const h = this.state.haiku; if (!h) return;
+  async composeCanvas() {
+    const h = this.state.haiku; if (!h) return null;
     try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch (e) {}
     const img = await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = this.state.stillSrc; });
-    const W = 1080, H = 1350;
+    const A = img.naturalWidth / img.naturalHeight || (4 / 5);
+    let W, H; if (A >= 1) { W = 1200; H = Math.round(1200 / A); } else { H = 1200; W = Math.round(1200 * A); }
     const c = document.createElement('canvas'); c.width = W; c.height = H;
     const ctx = c.getContext('2d');
     ctx.drawImage(img, 0, 0, W, H);
-    const stripW = W * 0.36, sx = W - stripW;
-    const grad = ctx.createLinearGradient(sx - 60, 0, W, 0);
-    grad.addColorStop(0, 'rgba(243,238,226,0)'); grad.addColorStop(0.28, 'rgba(243,238,226,.82)'); grad.addColorStop(1, 'rgba(243,238,226,.9)');
-    ctx.fillStyle = grad; ctx.fillRect(sx - 60, 0, stripW + 60, H);
-    ctx.fillStyle = 'rgba(28,26,20,.42)'; ctx.fillRect(sx, 0, 2, H);
-    const seal = this.props.sealColor || '#b23a2e';
-    const mark = this.props.sealKanji || '句';
-    const fs = 58, lh = fs * 1.18, gap = 22;
+    // Reproduce the on-screen layout exactly by scaling it to the canvas.
+    const pal = this.haikuPalette();
+    const [sr, sg, sb] = pal.scrimRGB;
+    const fw = this.state.frameW || W, fh = this.state.frameH || H;
+    const k = W / fw;                                  // screen px → canvas px
     const cols = [h.jou, h.chu, h.ge];
-    const colW = lh + gap;
-    let cx = sx + stripW / 2 + colW; // rightmost column center
-    const topY = H * 0.1 + fs;
-    ctx.fillStyle = '#1c1a14';
+    const lens = cols.map((s) => [...s].length);
+    const fs = (this.state.fitFont || 16) * k;
+    const charAdv = fs * 1.18;                          // glyph + .18em letter-spacing
+    const padI = 9 * k, padT = 10 * k, gap = 9 * k;     // column padding 10/9px + gap 9px
+    const colBoxW = fs * 1.15 + padI * 2;               // line-height 1.15 cross-axis + h padding
+    const totalW = colBoxW * 3 + gap * 2;
+    const areaR = this.anchorRect(this.state.anchor || 'MR');
+    const areaW = areaR.w * W, areaLeft = areaR.left * W, areaTop = areaR.top * H; // chosen anchor
+    const startLeft = areaLeft + (areaW - totalW) / 2;        // justify-content center
+    const tops = (this.state.fitTops && this.state.fitTops.length === 3)
+      ? this.state.fitTops.map((t) => t * k)
+      : [0, H * 0.08, H * 0.16];
+    const centerX = (i) => startLeft + totalW - colBoxW / 2 - i * (colBoxW + gap); // row-reverse: 0=right
+    // backdrop: soft radial fade behind each column (matches the screen mask)
+    ctx.save();
+    if (ctx.filter !== undefined) ctx.filter = `blur(${14 * k}px)`;
+    const centerA = pal.darkText ? 0.30 : 0.28;
+    cols.forEach((col, i) => {
+      const boxH = padT * 2 + charAdv * (lens[i] - 1) + fs;
+      const cx = centerX(i), topY = areaTop + tops[i], cyc = topY + boxH / 2;
+      const rw = colBoxW, rh = boxH, R = Math.max(rw, rh);
+      const g = ctx.createRadialGradient(cx, cyc, R * 0.19, cx, cyc, R * 0.52);
+      g.addColorStop(0, `rgba(${sr},${sg},${sb},${centerA})`);
+      g.addColorStop(0.62, `rgba(${sr},${sg},${sb},${centerA * 0.45})`);
+      g.addColorStop(1, `rgba(${sr},${sg},${sb},0)`);
+      ctx.fillStyle = g;
+      ctx.fillRect(cx - rw / 2 - 18 * k, topY - 18 * k, rw + 36 * k, rh + 36 * k);
+    });
+    ctx.restore();
+    // text
+    ctx.save();
+    if (pal.darkText) { ctx.fillStyle = '#1c1a14'; ctx.shadowColor = 'rgba(243,238,226,.9)'; ctx.shadowBlur = 6 * k; }
+    else { ctx.fillStyle = '#f6f1e6'; ctx.shadowColor = 'rgba(0,0,0,.65)'; ctx.shadowBlur = 10 * k; }
     ctx.font = `600 ${fs}px "Shippori Mincho", serif`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-    cols.forEach((col) => {
-      let y = topY;
-      for (const ch of [...col]) { ctx.fillText(ch, cx, y); y += fs * 1.18 + 6; }
-      cx -= colW;
+    cols.forEach((col, i) => {
+      const cx = centerX(i);
+      let y = areaTop + tops[i] + padT + fs * 0.9;     // first glyph baseline
+      for (const ch of [...col]) { ctx.fillText(ch, cx, y); y += charAdv; }
     });
-    // seal
-    const ss = 64, sxp = sx + stripW * 0.32, syp = H * 0.86;
-    ctx.save(); ctx.translate(sxp, syp); ctx.rotate(-3 * Math.PI / 180);
-    ctx.fillStyle = seal; this.roundRect(ctx, -ss / 2, -ss / 2, ss, ss, 9); ctx.fill();
-    ctx.fillStyle = '#f6f1e6'; ctx.font = `700 ${ss * 0.62}px "Shippori Mincho", serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(mark, 0, 2); ctx.restore();
-    const url = c.toDataURL('image/png');
-    const a = document.createElement('a'); a.href = url; a.download = '写句.png'; document.body.appendChild(a); a.click(); a.remove();
+    ctx.restore();
+    return c;
   }
+
+  stamp() {
+    const d = new Date(), p = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+  }
+
+  // ---- dedicated save folder (File System Access API, with download fallback) ----
+  hasFS() { return typeof window !== 'undefined' && 'showDirectoryPicker' in window; }
+  idb() {
+    return new Promise((res, rej) => {
+      const r = indexedDB.open('shaku', 1);
+      r.onupgradeneeded = () => { try { r.result.createObjectStore('kv'); } catch (e) {} };
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    });
+  }
+  async idbGet(k) { const db = await this.idb(); return new Promise((res) => { const t = db.transaction('kv', 'readonly').objectStore('kv').get(k); t.onsuccess = () => res(t.result); t.onerror = () => res(null); }); }
+  async idbSet(k, v) { const db = await this.idb(); return new Promise((res) => { const t = db.transaction('kv', 'readwrite').objectStore('kv').put(v, k); t.onsuccess = () => res(true); t.onerror = () => res(false); }); }
+
+  async getDirHandle(forcePick) {
+    if (!this.hasFS()) return null;
+    let handle = forcePick ? null : await this.idbGet('dir').catch(() => null);
+    if (handle) {
+      try {
+        let perm = await handle.queryPermission({ mode: 'readwrite' });
+        if (perm !== 'granted') perm = await handle.requestPermission({ mode: 'readwrite' });
+        if (perm !== 'granted') handle = null;
+      } catch (e) { handle = null; }
+    }
+    if (!handle) {
+      let base;
+      try { base = await window.showDirectoryPicker({ id: 'shaku', mode: 'readwrite', startIn: 'pictures' }); }
+      catch (e) { return null; }   // user cancelled
+      try { handle = await base.getDirectoryHandle('写句', { create: true }); }
+      catch (e) { handle = base; }
+      await this.idbSet('dir', handle).catch(() => {});
+    }
+    return handle;
+  }
+
+  async loadFolderName() {
+    if (!this.hasFS()) return;
+    try { const h = await this.idbGet('dir'); if (h && h.name) this.setState({ folderName: h.name }); } catch (e) {}
+  }
+
+  async saveBlobToDir(blob, name) {
+    const dir = await this.getDirHandle(false);
+    if (!dir) return null;
+    const fh = await dir.getFileHandle(name, { create: true });
+    const w = await fh.createWritable();
+    await w.write(blob); await w.close();
+    if (dir.name && dir.name !== this.state.folderName) this.setState({ folderName: dir.name });
+    return dir.name || '写句';
+  }
+
+  chooseFolder = async () => {
+    const dir = await this.getDirHandle(true);
+    if (dir) this.setState({ folderName: dir.name });
+  };
+
+  async saveWork() {
+    const c = await this.composeCanvas(); if (!c) return;
+    const name = `写句_${this.stamp()}.png`;
+    const blob = await new Promise((r) => c.toBlob(r, 'image/png'));
+    let savedTo = '';
+    if (this.hasFS() && blob) {
+      try { savedTo = await this.saveBlobToDir(blob, name); } catch (e) { savedTo = ''; }
+    }
+    if (!savedTo) {
+      // fallback: normal download (iOS Safari etc.)
+      const url = (blob ? URL.createObjectURL(blob) : c.toDataURL('image/png'));
+      const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+      if (blob) setTimeout(() => URL.revokeObjectURL(url), 4000);
+    }
+    this.addToGallery(c);
+    this.setState({ workSaved: true, savedTo });
+    clearTimeout(this._savedT); this._savedT = setTimeout(() => this.setState({ workSaved: false }), 2400);
+  }
+
+  // ---- gallery (saved works) — stored in IndexedDB for large capacity ----
+  async loadGalleryAsync() {
+    let list = [];
+    try { list = (await this.idbGet('gallery')) || []; } catch (e) { list = []; }
+    if (!list.length) {
+      // one-time migration from old localStorage store
+      try { const old = JSON.parse(localStorage.getItem('shaku_gallery') || '[]') || []; if (old.length) { list = old; await this.idbSet('gallery', list).catch(() => {}); } } catch (e) {}
+    }
+    return list;
+  }
+  async persistGallery(list) {
+    const arr = list.slice(0, 600);
+    try { await this.idbSet('gallery', arr); } catch (e) {}
+    return arr;
+  }
+  async addToGallery(canvas) {
+    // downscale to a gallery-friendly JPEG
+    const maxD = 720; const A = canvas.width / canvas.height;
+    let W, H; if (A >= 1) { W = maxD; H = Math.round(maxD / A); } else { H = maxD; W = Math.round(maxD * A); }
+    const tc = document.createElement('canvas'); tc.width = W; tc.height = H;
+    tc.getContext('2d').drawImage(canvas, 0, 0, W, H);
+    const src = tc.toDataURL('image/jpeg', 0.82);
+    const item = { id: 'w' + Date.now(), ts: Date.now(), src };
+    const list = [item].concat(this.state.gallery || []);
+    const saved = await this.persistGallery(list);
+    this.setState({ gallery: saved });
+  }
+  openGallery = () => { this.setState({ showGallery: true }); this.loadGalleryAsync().then((g) => this.setState({ gallery: g })); };
+  closeGallery = () => this.setState({ showGallery: false });
+  openViewer = (src) => this.setState({ viewerSrc: src });
+  closeViewer = () => this.setState({ viewerSrc: '' });
+  saveViewer = () => {
+    const url = this.state.viewerSrc; if (!url) return;
+    const a = document.createElement('a'); a.href = url; a.download = `写句_${this.stamp()}.jpg`; document.body.appendChild(a); a.click(); a.remove();
+  };
+  removeFromGallery = async (id) => {
+    const saved = await this.persistGallery((this.state.gallery || []).filter((w) => w.id !== id));
+    this.setState({ gallery: saved });
+  };
 
   roundRect(ctx, x, y, w, h, r) {
     ctx.beginPath();
     ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
     ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+
+  // pick scrim tone + text color from the photo's text area for max readability
+  haikuPalette() {
+    const sc = this.scene || {};
+    const rl = (sc.rightLum == null) ? 200 : sc.rightLum;   // photo luminance where text sits (0..255)
+    const busy = (sc.rightStd || 0) > 42;                   // textured area → stronger cover
+    const lightScrim = rl >= 130;
+    const scrimRGB = lightScrim ? [243, 238, 226] : [20, 16, 10];
+    const scrimLum = 0.299 * scrimRGB[0] + 0.587 * scrimRGB[1] + 0.114 * scrimRGB[2];
+    const a1 = busy ? (lightScrim ? 0.62 : 0.52) : (lightScrim ? 0.34 : 0.30);
+    const a2 = busy ? (lightScrim ? 0.86 : 0.76) : (lightScrim ? 0.56 : 0.50);
+    const blended = rl * (1 - a2) + scrimLum * a2;          // luminance text actually sits on
+    const darkText = blended >= 142;
+    const textColor = darkText ? '#1c1a14' : '#f6f1e6';
+    const textShadow = darkText
+      ? '0 1px 3px rgba(243,238,226,.9), 0 0 1px rgba(243,238,226,.95)'
+      : '0 1px 6px rgba(0,0,0,.65), 0 0 2px rgba(0,0,0,.55)';
+    const rgba = (a) => `rgba(${scrimRGB[0]},${scrimRGB[1]},${scrimRGB[2]},${a})`;
+    return { lightScrim, scrimRGB, a1, a2, darkText, textColor, textShadow,
+      scrimCss: `linear-gradient(90deg, ${rgba(0)}, ${rgba(a1)} 24%, ${rgba(a2)})`,
+      dividerColor: darkText ? 'rgba(35,32,25,.32)' : 'rgba(243,238,226,.3)' };
   }
 
   renderVals() {
@@ -624,17 +1107,87 @@ class Component extends DCLogic {
     const seal = this.props.sealColor || '#b23a2e';
     const mark = this.props.sealKanji || '句';
     const grain = this.props.grain == null ? true : this.props.grain;
+    const taste = this.state.taste || 'auto';
+    const tasteList = [
+      { key: 'real', label: '写実的', desc: '見たままを客観写生した、即物的な一句。' },
+      { key: 'emotion', label: '情緒的', desc: '心の機微や余情をにじませた、しっとりとした一句。' },
+      { key: 'philo', label: '哲学的', desc: '無常や時の流れを思わせる、思索のある一句。' },
+      { key: 'auto', label: 'おまかせ', desc: '写真に最もふさわしいテイストで詠みます。' }
+    ];
+    const tasteOptions = tasteList.map(t => ({
+      label: t.label,
+      select: () => this.setTaste(t.key),
+      style: {
+        fontFamily: "'Zen Kaku Gothic New',sans-serif", fontSize: '12px', letterSpacing: '.02em',
+        padding: '11px 0', borderRadius: '3px', cursor: 'pointer', transition: 'background .15s, color .15s, border-color .15s',
+        border: taste === t.key ? '1px solid #23201a' : '1px solid rgba(35,32,25,.24)',
+        background: taste === t.key ? '#23201a' : 'transparent',
+        color: taste === t.key ? '#f6f1e6' : '#23201a',
+        fontWeight: taste === t.key ? 600 : 400
+      }
+    }));
+    const tasteDesc = (tasteList.find(t => t.key === taste) || tasteList[3]).desc;
     const grainSvg = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E\")";
+    const tops = this.state.fitTops || [0, 28, 56];
     const cols = h ? [
-      { text: h.jou, style: { animation: 'inkRise .8s .15s both' } },
-      { text: h.chu, style: { animation: 'inkRise .8s .45s both' } },
-      { text: h.ge, style: { animation: 'inkRise .8s .75s both' } }
+      { text: h.jou, style: { writingMode:'vertical-rl', animation: 'inkRise .8s .15s both', whiteSpace: 'nowrap', marginTop: tops[0] + 'px' } },
+      { text: h.chu, style: { writingMode:'vertical-rl', animation: 'inkRise .8s .45s both', whiteSpace: 'nowrap', marginTop: tops[1] + 'px' } },
+      { text: h.ge, style: { writingMode:'vertical-rl', animation: 'inkRise .8s .75s both', whiteSpace: 'nowrap', marginTop: tops[2] + 'px' } }
     ] : [];
+
+    // --- adaptive haiku styling based on the photo's text area ---
+    const pal = this.haikuPalette();
+    // minimal blurred backdrop hugging each column (no wide strip)
+    const [br, bg, bb] = pal.scrimRGB;
+    const fade = 'radial-gradient(ellipse 72% 82% at 50% 50%, #000 38%, rgba(0,0,0,0.35) 70%, transparent 100%)';
+    const colBg = {
+      background: `rgba(${br},${bg},${bb},${pal.darkText ? 0.3 : 0.28})`,
+      backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+      borderRadius: '10px', padding: '10px 9px',
+      maskImage: fade, WebkitMaskImage: fade
+    };
+    const scrimStyle = { display:'none' };
+    const dividerStyle = { display:'none' };
+    const textColor = pal.textColor;
+    const textShadow = pal.textShadow;
+    if (h) cols.forEach(c => Object.assign(c.style, colBg));
+    // size: measured auto-fit (no wrapping); fall back to an estimate before first measure
+    const maxLen = h ? Math.max([...h.jou].length, [...h.chu].length, [...h.ge].length) : 7;
+    const estPx = Math.max(12, Math.min(24, Math.round(340 / (maxLen * 1.25) * 0.7 * 1.73)));
+    const fontPx = this.state.fitFont || estPx;
+    const haikuTextStyle = {
+      height:'100%', width:'100%', display:'flex', flexDirection:'row-reverse', alignItems:'flex-start', justifyContent:'center', gap:'9px',
+      fontFamily:"'Shippori Mincho',serif", fontWeight:600, fontSize:fontPx + 'px',
+      lineHeight:1.15, letterSpacing:'.18em', color:textColor, textShadow
+    };
+
     return {
+      colAreaRef: this.colAreaRef, textWrapRef: this.textWrapRef,
+      colAreaRef: this.colAreaRef, textWrapRef: this.textWrapRef,
+      colAreaStyle: (() => {
+        const r = this.anchorRect(this.state.anchor || 'MR');
+        return {
+          position: 'absolute',
+          left: (r.left * 100).toFixed(2) + '%',
+          top: (r.top * 100).toFixed(2) + '%',
+          width: (r.w * 100).toFixed(2) + '%',
+          height: (r.h * 100).toFixed(2) + '%',
+          display: 'flex', alignItems: 'flex-start', justifyContent: 'center'
+        };
+      })(),
+      scrimStyle, dividerStyle, haikuTextStyle,
       pageBg: '#ece4d4',
       grainBg: grain ? grainSvg : 'none',
       seal, sealMark: mark,
       videoRef: this.videoRef, fileRef: this.fileRef, stillRef: this.stillRef,
+      outerRef: this.outerRef,
+      frameStyle: {
+        position:'relative',
+        width: (this.state.frameW || 0) ? this.state.frameW + 'px' : 'min(94vw,440px)',
+        height: (this.state.frameH || 0) ? this.state.frameH + 'px' : 'min(58vh,520px)',
+        background:'#1b1813', borderRadius:'3px', overflow:'hidden',
+        boxShadow:'0 1px 0 rgba(255,255,255,.5), 0 18px 40px -18px rgba(20,16,10,.55), 0 0 0 1px rgba(35,32,25,.22)'
+      },
       isCamera: phase === 'camera',
       videoFlip: this.state.facing === 'user' ? 'scaleX(-1)' : 'none',
       isGenerating: phase === 'generating',
@@ -655,6 +1208,17 @@ class Component extends DCLogic {
       flashAnim: this.state.flash ? 'shutterFlash 1s ease-out' : 'none',
       haikuColumns: cols,
       kigo: h ? (h.kigo || '—') : '—',
+      showExplain: this.state.showExplain,
+      openExplain: this.openExplain,
+      closeExplain: this.closeExplain,
+      explainLoading: this.state.explainLoading,
+      explainReady: !this.state.explainLoading && !!this.state.explainText,
+      explainText: this.state.explainText,
+      explainStillRef: this.explainStillRef,
+      explainColumns: h ? [h.jou, h.chu, h.ge].map((t) => ({
+        text: t,
+        style: { writingMode: 'vertical-rl', whiteSpace: 'nowrap' }
+      })) : [],
       errorMsg: this.state.errorMsg,
       capture: this.capture,
       onPickFile: this.onPickFile,
@@ -662,6 +1226,12 @@ class Component extends DCLogic {
       retake: this.retake,
       retryCamera: this.retryCamera,
       saveWork: () => this.saveWork(),
+      saveWorkLabel: this.state.workSaved ? (this.state.savedTo ? '「' + this.state.savedTo + '」に保存' : '保存しました') : '作品を保存',
+      hasFS: this.hasFS(),
+      folderName: this.state.folderName || '',
+      folderStatus: this.state.folderName ? '「' + this.state.folderName + '」に自動保存' : '未設定（初回保存時に選択）',
+      folderBtnLabel: this.state.folderName ? '変更' : 'フォルダを選ぶ',
+      chooseFolder: this.chooseFolder,
       // settings
       showSettings: this.state.showSettings,
       openSettings: this.openSettings,
@@ -671,6 +1241,8 @@ class Component extends DCLogic {
       saveSettings: this.saveSettings,
       keyDraft: this.state.keyDraft,
       useAI: this.state.useAI,
+      tasteDesc: tasteDesc,
+      tasteOptions: tasteOptions,
       saved: this.state.saved,
       builtinAI: this.hasBuiltinAI(),
       needsKey: !this.hasBuiltinAI(),
@@ -703,7 +1275,33 @@ class Component extends DCLogic {
         position: 'absolute', top: '3px', left: this.state.useAI ? '23px' : '3px',
         width: '20px', height: '20px', borderRadius: '50%', background: '#fffdf8',
         boxShadow: '0 1px 3px rgba(0,0,0,.25)', transition: 'left .2s'
-      }
+      },
+      // gallery
+      openGallery: this.openGallery,
+      closeGallery: this.closeGallery,
+      showGallery: this.state.showGallery,
+      galleryItems: (this.state.gallery || []).map(w => ({
+        src: w.src,
+        open: () => this.openViewer(w.src),
+        remove: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this.removeFromGallery(w.id); }
+      })),
+      galleryGrid: (this.state.gallery || []).map(w => React.createElement('div', {
+        key: w.id,
+        style: { position:'relative', borderRadius:'3px', overflow:'hidden', boxShadow:'0 1px 0 rgba(255,255,255,.5), 0 8px 20px -12px rgba(20,16,10,.5), 0 0 0 1px rgba(35,32,25,.14)', cursor:'pointer' }
+      },
+        React.createElement('img', { src: w.src, alt: '', onClick: () => this.openViewer(w.src), style: { display:'block', width:'100%', height:'auto' } }),
+        React.createElement('button', {
+          'aria-label': '削除',
+          onClick: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this.removeFromGallery(w.id); },
+          style: { position:'absolute', top:'6px', right:'6px', width:'26px', height:'26px', borderRadius:'50%', border:'none', background:'rgba(20,16,10,.55)', color:'#f6f1e6', fontSize:'14px', lineHeight:1, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }
+        }, '×')
+      )),
+      viewerImg: this.state.viewerSrc ? React.createElement('img', { src: this.state.viewerSrc, alt: '', style: { maxWidth:'100%', maxHeight:'74vh', borderRadius:'3px', boxShadow:'0 20px 50px -16px rgba(0,0,0,.7)' } }) : null,
+      galleryEmpty: !(this.state.gallery && this.state.gallery.length),
+      galleryCount: (this.state.gallery && this.state.gallery.length) ? this.state.gallery.length + '点' : '',
+      viewerSrc: this.state.viewerSrc || '',
+      closeViewer: this.closeViewer,
+      saveViewer: this.saveViewer
     };
   }
 }
