@@ -61,10 +61,13 @@
           
           
           <div ref="{{ colAreaRef }}" style="{{ colAreaStyle }}">
-            <div ref="{{ textWrapRef }}" style="{{ haikuTextStyle }}">
+            <div ref="{{ textWrapRef }}" style="{{ haikuTextStyle }}" onPointerDown="{{ onHaikuPointerDown }}" onPointerMove="{{ onHaikuPointerMove }}" onPointerUp="{{ onHaikuPointerUp }}" onPointerCancel="{{ onHaikuPointerUp }}" onWheel="{{ onHaikuWheel }}">
               <sc-for list="{{ haikuColumns }}" as="col" hint-placeholder-count="3">
                 <div style="{{ col.style }}">{{ col.text }}</div>
               </sc-for>
+              <div onPointerDown="{{ onResizePointerDown }}" onPointerMove="{{ onResizePointerMove }}" onPointerUp="{{ onResizePointerUp }}" onPointerCancel="{{ onResizePointerUp }}" style="{{ resizeHandleStyle }}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"></path></svg>
+              </div>
             </div>
           </div>
           
@@ -138,6 +141,14 @@
           <sc-if value="{{ aiFailed }}" hint-placeholder-val="{{ false }}">
             <div onClick="{{ openSettings }}" style="max-width:330px; font-family:'Zen Kaku Gothic New',sans-serif; font-size:11px; line-height:1.7; color:#8a3a2e; background:rgba(178,58,46,.08); border:1px solid rgba(178,58,46,.28); border-radius:3px; padding:9px 12px; text-align:center; cursor:pointer;">{{ aiFailText }}<br></div>
           </sc-if>
+          <div style="display:flex; align-items:center; gap:12px; font-family:'Zen Kaku Gothic New',sans-serif; font-size:11px; letter-spacing:.06em; color:#7a7060;">
+            <span style="white-space:nowrap;">句をドラッグで移動</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <button onClick="{{ adjSmaller }}" aria-label="小さく" style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; font-size:17px; line-height:1; color:#23201a; background:none; border:1px solid #23201a55; border-radius:2px; cursor:pointer;">－</button>
+              <button onClick="{{ adjBigger }}" aria-label="大きく" style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; font-size:17px; line-height:1; color:#23201a; background:none; border:1px solid #23201a55; border-radius:2px; cursor:pointer;">＋</button>
+              <button onClick="{{ resetAdjust }}" style="height:32px; padding:0 12px; font-family:'Shippori Mincho',serif; font-size:12px; letter-spacing:.1em; color:#23201a; background:none; border:1px solid #23201a55; border-radius:2px; cursor:pointer;">リセット</button>
+            </div>
+          </div>
           <div style="font-family:'Shippori Mincho',serif; font-size:12px; letter-spacing:.28em; color:#7a7060;">季語　{{ kigo }}</div>
           <div style="display:flex; gap:11px; flex-wrap:wrap; justify-content:center;">
             <button onClick="{{ retake }}" style="font-family:'Shippori Mincho',serif; font-size:14px; letter-spacing:.16em; color:#23201a; background:none; border:1px solid #23201a55; padding:11px 20px; border-radius:2px; cursor:pointer;">もう一度</button>
@@ -325,7 +336,7 @@ class Component extends DCLogic {
   state = { phase: 'camera', stillSrc: '', haiku: null, errorMsg: '', flash: 0, facing: 'environment', frameAspect: 4 / 5, frameW: 0, frameH: 0, isLandscape: false,
     showSettings: false, showGallery: false, gallery: [], viewerSrc: '', anchor: 'TR', useAI: true, apiKey: '', apiModel: 'claude-sonnet-4-20250514', keyDraft: '', saved: false, taste: 'auto',
     showExplain: false, explainText: '', explainLoading: false, explainHaiku: null, explainImg: '', viewerWork: null,
-    lowCredit: false, copiedBilling: false };
+    lowCredit: false, copiedBilling: false, adjX: 0, adjY: 0, adjScale: 1, adjusted: false };
 
   isCreditError(msg) { return /credit balance|too low|insufficient|account_billing|残高/i.test(String(msg || '')); }
 
@@ -629,7 +640,7 @@ class Component extends DCLogic {
       this.sceneHints = hints;
       const anchor = this.pickAnchor(); this.applyAnchorPalette(anchor);
       this.setFrameAspect(aspect);
-      this.setState({ stillSrc: dataUrl, phase: 'generating', dragOver: false, anchor });
+      this.setState({ stillSrc: dataUrl, phase: 'generating', dragOver: false, anchor, adjX: 0, adjY: 0, adjScale: 1, adjusted: false });
       this.generate(apiDataUrl);
     };
     img.src = URL.createObjectURL(f);
@@ -837,7 +848,7 @@ class Component extends DCLogic {
     this.sceneHints = hints;
     const anchor = this.pickAnchor(); this.applyAnchorPalette(anchor);
     this.setFrameAspect(aspect);
-    this.setState({ stillSrc: dataUrl, phase: 'generating', anchor });
+    this.setState({ stillSrc: dataUrl, phase: 'generating', anchor, adjX: 0, adjY: 0, adjScale: 1, adjusted: false });
     this.generate(apiDataUrl);
   };
 
@@ -980,11 +991,72 @@ class Component extends DCLogic {
   }
 
   retake = () => {
-    this.setState({ phase: 'camera', haiku: null, stillSrc: '', fitFont: null });
+    this.setState({ phase: 'camera', haiku: null, stillSrc: '', fitFont: null, adjX: 0, adjY: 0, adjScale: 1, adjusted: false });
     this.setFrameAspect(this.cameraAspect());
     if (!this.stream) this.startCamera();
     else { const v = this.videoRef.current; if (v && v.paused) v.play().catch(() => {}); }
   };
+
+  // ---- 手動調整: 句をドラッグで移動 / つまむ・角・±で拡大縮小 ----
+  clampAdj(x, y) {
+    const fw = this.state.frameW || 320, fh = this.state.frameH || 420;
+    return { x: Math.max(-fw * 0.65, Math.min(fw * 0.65, x)), y: Math.max(-fh * 0.65, Math.min(fh * 0.65, y)) };
+  }
+  gestureMetrics() {
+    const pts = this._ptrs ? [...this._ptrs.values()] : [];
+    if (!pts.length) return null;
+    let cx = 0, cy = 0; for (const p of pts) { cx += p.x; cy += p.y; } cx /= pts.length; cy /= pts.length;
+    let dist = 0; if (pts.length >= 2) dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+    return { cx, cy, dist };
+  }
+  onHaikuPointerDown = (e) => {
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (x) {}
+    if (!this._ptrs) this._ptrs = new Map();
+    this._ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    this._baseAdj = { x: this.state.adjX || 0, y: this.state.adjY || 0, s: this.state.adjScale || 1 };
+    this._gesture = this.gestureMetrics();
+  };
+  onHaikuPointerMove = (e) => {
+    if (!this._ptrs || !this._ptrs.has(e.pointerId) || !this._gesture) return;
+    this._ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const g = this.gestureMetrics(); if (!g) return;
+    const dx = g.cx - this._gesture.cx, dy = g.cy - this._gesture.cy;
+    let ds = 1;
+    if (this._ptrs.size >= 2 && this._gesture.dist > 0) ds = g.dist / this._gesture.dist;
+    const ns = Math.max(0.45, Math.min(3, this._baseAdj.s * ds));
+    const p = this.clampAdj(this._baseAdj.x + dx, this._baseAdj.y + dy);
+    this.setState({ adjX: p.x, adjY: p.y, adjScale: ns, adjusted: true });
+  };
+  onHaikuPointerUp = (e) => {
+    if (this._ptrs) this._ptrs.delete(e.pointerId);
+    this._baseAdj = { x: this.state.adjX || 0, y: this.state.adjY || 0, s: this.state.adjScale || 1 };
+    this._gesture = this.gestureMetrics();
+  };
+  onHaikuWheel = (e) => {
+    try { e.preventDefault(); } catch (x) {}
+    const f = e.deltaY < 0 ? 1.08 : 1 / 1.08;
+    this.setState(s => ({ adjScale: Math.max(0.45, Math.min(3, (s.adjScale || 1) * f)), adjusted: true }));
+  };
+  onResizePointerDown = (e) => {
+    e.stopPropagation();
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (x) {}
+    const wrap = this.textWrapRef.current; if (!wrap) return;
+    const r = wrap.getBoundingClientRect();
+    this._rc = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    this._rd = Math.hypot(e.clientX - this._rc.x, e.clientY - this._rc.y) || 1;
+    this._rs = this.state.adjScale || 1;
+  };
+  onResizePointerMove = (e) => {
+    if (!this._rc) return;
+    e.stopPropagation();
+    const d = Math.hypot(e.clientX - this._rc.x, e.clientY - this._rc.y);
+    const ns = Math.max(0.45, Math.min(3, this._rs * (d / this._rd)));
+    this.setState({ adjScale: ns, adjusted: true });
+  };
+  onResizePointerUp = (e) => { e.stopPropagation(); this._rc = null; };
+  adjBigger = () => this.setState(s => ({ adjScale: Math.max(0.45, Math.min(3, (s.adjScale || 1) * 1.12)), adjusted: true }));
+  adjSmaller = () => this.setState(s => ({ adjScale: Math.max(0.45, Math.min(3, (s.adjScale || 1) / 1.12)), adjusted: true }));
+  resetAdjust = () => this.setState({ adjX: 0, adjY: 0, adjScale: 1, adjusted: false });
 
   async composeCanvas() {
     const h = this.state.haiku; if (!h) return null;
@@ -1002,17 +1074,21 @@ class Component extends DCLogic {
     const k = W / fw;                                  // screen px → canvas px
     const cols = [h.jou, h.chu, h.ge];
     const lens = cols.map((s) => [...s].length);
-    const fs = (this.state.fitFont || 16) * k;
+    const adjScale = this.state.adjScale || 1;
+    const fs = (this.state.fitFont || 16) * adjScale * k;
     const charAdv = fs * 1.18;                          // glyph + .18em letter-spacing
     const padI = 4 * k, padT = 10 * k, gap = 9 * k;     // 列の横余白を詰める（4px）
     const colBoxW = fs * 1.15 + padI * 2;               // line-height 1.15 cross-axis + h padding
     const totalW = colBoxW * 3 + gap * 2;
     const areaR = this.anchorRect(this.state.anchor || 'TR');
-    const areaW = areaR.w * W, areaLeft = areaR.left * W, areaTop = areaR.top * H; // chosen anchor
+    // 手動移動オフセット(画面px→canvas px)を反映
+    const areaW = areaR.w * W;
+    const areaLeft = areaR.left * W + (this.state.adjX || 0) * k;
+    const areaTop = areaR.top * H + (this.state.adjY || 0) * k;
     const startLeft = areaLeft + (areaW - totalW) / 2;        // justify-content center
     const tops = (this.state.fitTops && this.state.fitTops.length === 3)
-      ? this.state.fitTops.map((t) => t * k)
-      : [0, H * 0.08, H * 0.16];
+      ? this.state.fitTops.map((t) => t * adjScale * k)
+      : [0, H * 0.08 * adjScale, H * 0.16 * adjScale];
     const centerX = (i) => startLeft + totalW - colBoxW / 2 - i * (colBoxW + gap); // row-reverse: 0=right
     // backdrop: 縦書き列の幅にぴったり沿う細いぼかし帯
     ctx.save();
@@ -1233,7 +1309,8 @@ class Component extends DCLogic {
     }));
     const tasteDesc = (tasteList.find(t => t.key === taste) || tasteList[3]).desc;
     const grainSvg = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E\")";
-    const tops = this.state.fitTops || [0, 28, 56];
+    const adjScale = this.state.adjScale || 1;
+    const tops = (this.state.fitTops || [0, 28, 56]).map(t => t * adjScale);
     const cols = h ? [
       { text: h.jou, style: { writingMode:'vertical-rl', animation: 'inkRise .8s .15s both', whiteSpace: 'nowrap', marginTop: tops[0] + 'px' } },
       { text: h.chu, style: { writingMode:'vertical-rl', animation: 'inkRise .8s .45s both', whiteSpace: 'nowrap', marginTop: tops[1] + 'px' } },
@@ -1258,11 +1335,22 @@ class Component extends DCLogic {
     if (h) cols.forEach(c => Object.assign(c.style, colBg));
     // size: measured auto-fit (no wrapping); fall back to an estimate before first measure
     const estPx = 16;   // 計測前の控えめな初期値（直後に fitHaiku が実寸へ調整）
-    const fontPx = this.state.fitFont || estPx;
+    const fontPx = Math.round((this.state.fitFont || estPx) * adjScale);
+    const adaptiveOutline = pal.darkText ? 'rgba(35,32,25,.4)' : 'rgba(246,241,230,.55)';
     const haikuTextStyle = {
-      height:'100%', width:'100%', display:'flex', flexDirection:'row-reverse', alignItems:'flex-start', justifyContent:'center', gap:'9px',
+      position:'relative', display:'flex', flexDirection:'row-reverse', alignItems:'flex-start', justifyContent:'center', gap:'9px',
       fontFamily:"'Shippori Mincho',serif", fontWeight:600, fontSize:fontPx + 'px',
-      lineHeight:1.15, letterSpacing:'.18em', color:textColor, textShadow
+      lineHeight:1.15, letterSpacing:'.18em', color:textColor, textShadow,
+      transform:`translate(${this.state.adjX||0}px, ${this.state.adjY||0}px)`,
+      cursor:'grab', touchAction:'none', userSelect:'none', WebkitUserSelect:'none',
+      outline:`1px dashed ${adaptiveOutline}`, outlineOffset:'7px', borderRadius:'6px'
+    };
+    const handleColor = pal.darkText ? '#1c1a14' : '#f6f1e6';
+    const resizeHandleStyle = {
+      position:'absolute', left:'-12px', bottom:'-12px', width:'30px', height:'30px', borderRadius:'50%',
+      display:'flex', alignItems:'center', justifyContent:'center', cursor:'nwse-resize', touchAction:'none',
+      color:handleColor, background: pal.darkText ? 'rgba(243,238,226,.75)' : 'rgba(20,16,10,.6)',
+      boxShadow:'0 2px 6px rgba(0,0,0,.3)'
     };
 
     return {
@@ -1279,7 +1367,12 @@ class Component extends DCLogic {
           display: 'flex', alignItems: 'flex-start', justifyContent: 'center'
         };
       })(),
-      scrimStyle, dividerStyle, haikuTextStyle,
+      scrimStyle, dividerStyle, haikuTextStyle, resizeHandleStyle,
+      onHaikuPointerDown: this.onHaikuPointerDown, onHaikuPointerMove: this.onHaikuPointerMove,
+      onHaikuPointerUp: this.onHaikuPointerUp, onHaikuWheel: this.onHaikuWheel,
+      onResizePointerDown: this.onResizePointerDown, onResizePointerMove: this.onResizePointerMove,
+      onResizePointerUp: this.onResizePointerUp,
+      adjBigger: this.adjBigger, adjSmaller: this.adjSmaller, resetAdjust: this.resetAdjust,
       pageBg: '#ece4d4',
       grainBg: grain ? grainSvg : 'none',
       seal, sealMark: mark,
